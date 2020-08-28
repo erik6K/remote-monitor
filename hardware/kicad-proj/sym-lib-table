@@ -1,4 +1,3 @@
 (sym_lib_table
-  (lib (name remote-monitor)(type Legacy)(uri C:/workspace/uni/remote-monitor/hardware/kicad-proj/remote-monitor.lib)(options "")(descr ""))
   (lib (name 1.remote-monitor)(type Legacy)(uri C:/workspace/uni/remote-monitor/hardware/kicad-proj/1.remote-monitor.lib)(options "")(descr ""))
 )

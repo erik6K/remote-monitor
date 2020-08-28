@@ -1,4 +1,5 @@
 EESchema Schematic File Version 4
+LIBS:remote-monitor-cache
 EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
@@ -13,4 +14,398 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
+$Comp
+L Device:D_ALT D?
+U 1 1 5F48BEF5
+P 2325 2025
+F 0 "D?" H 2325 1809 50  0000 C CNN
+F 1 "D_ALT" H 2325 1900 50  0000 C CNN
+F 2 "" H 2325 2025 50  0001 C CNN
+F 3 "~" H 2325 2025 50  0001 C CNN
+	1    2325 2025
+	-1   0    0    1   
+$EndComp
+$Comp
+L Regulator_Switching:R-78B5.0-2.0 U?
+U 1 1 5F48C42B
+P 3475 2025
+F 0 "U?" H 3475 2267 50  0000 C CNN
+F 1 "DC/DC Converter" H 3475 2176 50  0000 C CNN
+F 2 "Converter_DCDC:Converter_DCDC_RECOM_R-78B-2.0_THT" H 3525 1775 50  0001 L CIN
+F 3 "https://www.recom-power.com/pdf/Innoline/R-78Bxx-2.0.pdf" H 3475 2025 50  0001 C CNN
+	1    3475 2025
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5F48C4A5
+P 3625 3025
+F 0 "R?" V 3418 3025 50  0000 C CNN
+F 1 "5K" V 3509 3025 50  0000 C CNN
+F 2 "" V 3555 3025 50  0001 C CNN
+F 3 "~" H 3625 3025 50  0001 C CNN
+	1    3625 3025
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:CP C?
+U 1 1 5F48C5AC
+P 2675 2225
+F 0 "C?" H 2793 2271 50  0000 L CNN
+F 1 "10uF" H 2793 2180 50  0000 L CNN
+F 2 "" H 2713 2075 50  0001 C CNN
+F 3 "~" H 2675 2225 50  0001 C CNN
+	1    2675 2225
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5F48C6F9
+P 2675 2525
+F 0 "#PWR?" H 2675 2275 50  0001 C CNN
+F 1 "GND" H 2680 2352 50  0000 C CNN
+F 2 "" H 2675 2525 50  0001 C CNN
+F 3 "" H 2675 2525 50  0001 C CNN
+	1    2675 2525
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2675 2375 2675 2425
+Wire Wire Line
+	2475 2025 2675 2025
+Wire Wire Line
+	2675 2075 2675 2025
+Connection ~ 2675 2025
+Wire Wire Line
+	2675 2025 3025 2025
+Connection ~ 3025 2025
+Wire Wire Line
+	3025 2025 3175 2025
+$Comp
+L power:GND #PWR?
+U 1 1 5F48C96B
+P 3475 2375
+F 0 "#PWR?" H 3475 2125 50  0001 C CNN
+F 1 "GND" H 3480 2202 50  0000 C CNN
+F 2 "" H 3475 2375 50  0001 C CNN
+F 3 "" H 3475 2375 50  0001 C CNN
+	1    3475 2375
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3475 2325 3475 2375
+Wire Wire Line
+	3025 2025 3025 3025
+Wire Wire Line
+	4025 2025 4025 1925
+$Comp
+L power:+5V #PWR?
+U 1 1 5F48CE6F
+P 4025 1925
+F 0 "#PWR?" H 4025 1775 50  0001 C CNN
+F 1 "+5V" H 4040 2098 50  0000 C CNN
+F 2 "" H 4025 1925 50  0001 C CNN
+F 3 "" H 4025 1925 50  0001 C CNN
+	1    4025 1925
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:D_ALT D?
+U 1 1 5F48D129
+P 3925 2775
+F 0 "D?" V 3879 2854 50  0000 L CNN
+F 1 "D_ALT" V 3970 2854 50  0000 L CNN
+F 2 "" H 3925 2775 50  0001 C CNN
+F 3 "~" H 3925 2775 50  0001 C CNN
+	1    3925 2775
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3925 2925 3925 3025
+Connection ~ 3925 3025
+Wire Wire Line
+	3925 3025 4250 3025
+$Comp
+L Device:R R?
+U 1 1 5F48D648
+P 3925 3325
+F 0 "R?" H 3855 3279 50  0000 R CNN
+F 1 "1K" H 3855 3370 50  0000 R CNN
+F 2 "" V 3855 3325 50  0001 C CNN
+F 3 "~" H 3925 3325 50  0001 C CNN
+	1    3925 3325
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	3925 3025 3925 3175
+Wire Wire Line
+	3775 3025 3925 3025
+$Comp
+L power:GND #PWR?
+U 1 1 5F48DCE5
+P 3925 3575
+F 0 "#PWR?" H 3925 3325 50  0001 C CNN
+F 1 "GND" H 3930 3402 50  0000 C CNN
+F 2 "" H 3925 3575 50  0001 C CNN
+F 3 "" H 3925 3575 50  0001 C CNN
+	1    3925 3575
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3925 3475 3925 3525
+$Comp
+L Device:C C?
+U 1 1 5F48DF65
+P 4250 3325
+F 0 "C?" H 4365 3371 50  0000 L CNN
+F 1 "100nf" H 4365 3280 50  0000 L CNN
+F 2 "" H 4288 3175 50  0001 C CNN
+F 3 "~" H 4250 3325 50  0001 C CNN
+	1    4250 3325
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4250 3025 4250 3175
+Connection ~ 4250 3025
+Wire Wire Line
+	4250 3025 4375 3025
+Wire Wire Line
+	4250 3475 4250 3525
+Wire Wire Line
+	4250 3525 3925 3525
+Connection ~ 3925 3525
+Wire Wire Line
+	3925 3525 3925 3575
+Text Label 4375 3025 0    50   ~ 0
+Battery_Volts
+Wire Notes Line
+	3125 1725 3825 1725
+Wire Notes Line
+	3825 1725 3825 2625
+Wire Notes Line
+	3825 2625 3125 2625
+Wire Notes Line
+	3125 2625 3125 1725
+Wire Wire Line
+	3025 3025 3475 3025
+$Comp
+L Device:D_ALT D?
+U 1 1 5F48FAFE
+P 1725 3525
+F 0 "D?" V 1679 3604 50  0000 L CNN
+F 1 "D_ALT" V 1770 3604 50  0000 L CNN
+F 2 "" H 1725 3525 50  0001 C CNN
+F 3 "~" H 1725 3525 50  0001 C CNN
+	1    1725 3525
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1725 3325 1725 3375
+Wire Wire Line
+	1725 3675 1725 3725
+Connection ~ 1725 3725
+Wire Wire Line
+	1725 3725 2275 3725
+Text Label 2275 3725 0    50   ~ 0
+Mains_Sensor_Out
+$Comp
+L 1.remote-monitor:Arduino_MKR_WiFi_1010 A?
+U 1 1 5F491A2D
+P 7700 3950
+F 0 "A?" H 7700 5017 50  0000 C CNN
+F 1 "Arduino_MKR_WiFi_1010" H 7700 4926 50  0000 C CNN
+F 2 "" H 7700 3950 50  0001 C CNN
+F 3 "" H 7700 3950 50  0001 C CNN
+	1    7700 3950
+	1    0    0    -1  
+$EndComp
+Text Label 8500 4100 0    50   ~ 0
+Mains_Sensor_Out
+Text Label 8500 4250 0    50   ~ 0
+Battery_Volts
+Wire Wire Line
+	8200 4050 8375 4050
+Wire Wire Line
+	8375 4050 8375 4100
+Wire Wire Line
+	8375 4100 8500 4100
+Wire Wire Line
+	8200 4150 8375 4150
+Wire Wire Line
+	8375 4150 8375 4250
+Wire Wire Line
+	8375 4250 8500 4250
+$Comp
+L power:GND #PWR?
+U 1 1 5F4965BF
+P 8300 4800
+F 0 "#PWR?" H 8300 4550 50  0001 C CNN
+F 1 "GND" H 8305 4627 50  0000 C CNN
+F 2 "" H 8300 4800 50  0001 C CNN
+F 3 "" H 8300 4800 50  0001 C CNN
+	1    8300 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR?
+U 1 1 5F496EED
+P 8500 3350
+F 0 "#PWR?" H 8500 3200 50  0001 C CNN
+F 1 "+5V" H 8515 3523 50  0000 C CNN
+F 2 "" H 8500 3350 50  0001 C CNN
+F 3 "" H 8500 3350 50  0001 C CNN
+	1    8500 3350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8200 3400 8500 3400
+Wire Wire Line
+	8500 3400 8500 3350
+Wire Wire Line
+	8200 4750 8300 4750
+Wire Wire Line
+	8300 4750 8300 4800
+Wire Wire Line
+	1050 2025 1525 2025
+Wire Wire Line
+	1050 2225 1525 2225
+Wire Wire Line
+	1525 2225 1525 2025
+Connection ~ 1525 2025
+Wire Wire Line
+	1525 2025 2175 2025
+Wire Wire Line
+	1050 2125 1700 2125
+Wire Wire Line
+	2200 2125 2200 2425
+Wire Wire Line
+	2200 2425 2675 2425
+Connection ~ 2675 2425
+Wire Wire Line
+	2675 2425 2675 2525
+Wire Wire Line
+	1050 2325 1700 2325
+Wire Wire Line
+	1700 2325 1700 2125
+Connection ~ 1700 2125
+Wire Wire Line
+	1700 2125 2200 2125
+Wire Wire Line
+	3775 2025 4025 2025
+Wire Wire Line
+	3925 2625 3925 2550
+Wire Wire Line
+	3925 2550 4025 2550
+Wire Wire Line
+	4025 2550 4025 2475
+$Comp
+L power:+3V3 #PWR?
+U 1 1 5F49F655
+P 4025 2475
+F 0 "#PWR?" H 4025 2325 50  0001 C CNN
+F 1 "+3V3" H 4040 2648 50  0000 C CNN
+F 2 "" H 4025 2475 50  0001 C CNN
+F 3 "" H 4025 2475 50  0001 C CNN
+	1    4025 2475
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR?
+U 1 1 5F4A0369
+P 1725 3325
+F 0 "#PWR?" H 1725 3175 50  0001 C CNN
+F 1 "+3V3" H 1740 3498 50  0000 C CNN
+F 2 "" H 1725 3325 50  0001 C CNN
+F 3 "" H 1725 3325 50  0001 C CNN
+	1    1725 3325
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Screw_Terminal_01x04 J?
+U 1 1 5F4A03E8
+P 850 2125
+F 0 "J?" H 770 2442 50  0000 C CNN
+F 1 "Screw_Terminal_01x04" H 770 2351 50  0000 C CNN
+F 2 "" H 850 2125 50  0001 C CNN
+F 3 "~" H 850 2125 50  0001 C CNN
+	1    850  2125
+	-1   0    0    -1  
+$EndComp
+$Comp
+L Connector:Screw_Terminal_01x02 J?
+U 1 1 5F4A04DE
+P 875 3725
+F 0 "J?" H 795 3942 50  0000 C CNN
+F 1 "Screw_Terminal_01x02" H 795 3851 50  0000 C CNN
+F 2 "" H 875 3725 50  0001 C CNN
+F 3 "~" H 875 3725 50  0001 C CNN
+	1    875  3725
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	1075 3725 1725 3725
+Wire Wire Line
+	1075 3825 1225 3825
+Wire Wire Line
+	1225 3825 1225 3900
+$Comp
+L power:GND #PWR?
+U 1 1 5F4A2BFE
+P 1225 3900
+F 0 "#PWR?" H 1225 3650 50  0001 C CNN
+F 1 "GND" H 1230 3727 50  0000 C CNN
+F 2 "" H 1225 3900 50  0001 C CNN
+F 3 "" H 1225 3900 50  0001 C CNN
+	1    1225 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Regulator_Switching:R-78B5.0-2.0 U?
+U 1 1 5F4A46E3
+P 3475 925
+F 0 "U?" H 3475 1167 50  0000 C CNN
+F 1 "DC/DC Converter" H 3475 1076 50  0000 C CNN
+F 2 "Converter_DCDC:Converter_DCDC_RECOM_R-78B-2.0_THT" H 3525 675 50  0001 L CIN
+F 3 "https://www.recom-power.com/pdf/Innoline/R-78Bxx-2.0.pdf" H 3475 925 50  0001 C CNN
+	1    3475 925 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3025 925  3175 925 
+$Comp
+L power:GND #PWR?
+U 1 1 5F4A46EB
+P 3475 1275
+F 0 "#PWR?" H 3475 1025 50  0001 C CNN
+F 1 "GND" H 3480 1102 50  0000 C CNN
+F 2 "" H 3475 1275 50  0001 C CNN
+F 3 "" H 3475 1275 50  0001 C CNN
+	1    3475 1275
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3475 1225 3475 1275
+Wire Notes Line
+	3125 625  3825 625 
+Wire Notes Line
+	3825 625  3825 1525
+Wire Notes Line
+	3825 1525 3125 1525
+Wire Notes Line
+	3125 1525 3125 625 
+Wire Wire Line
+	3775 925  4025 925 
+Wire Wire Line
+	3025 925  3025 2025
+$Comp
+L Connector:USB_A J?
+U 1 1 5F4A6EA3
+P 4850 950
+F 0 "J?" H 4620 941 50  0000 R CNN
+F 1 "USB_A" H 4620 850 50  0000 R CNN
+F 2 "" H 5000 900 50  0001 C CNN
+F 3 " ~" H 5000 900 50  0001 C CNN
+	1    4850 950 
+	-1   0    0    -1  
+$EndComp
 $EndSCHEMATC

@@ -5,3 +5,9 @@
 .divin {
     display: inline-block;
 }
+
+.maindiv {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}

@@ -1,13 +1,21 @@
+body {
+    background-color: #F7F9FB;
+}
+
 .divbig {
     display: block;
 }
 
 .divin {
     display: inline-block;
+    border: 1px solid #8FC1E3;
+    border-radius: 10px;
+    width: 20vw;
+    height: 20vh;
 }
 
 .maindiv {
     position: fixed;
-    top: 50%;
-    left: 50%;
+    top: 30vh;
+    left: 30vw;
 }

@@ -1,6 +1,7 @@
 #gitignore
-venv/*
+web/venv/*
 web/arduino_cloud_trial/venv/*
 web/aws_trial/aws/*
 web/aws_trial/venv/*
 web/aws_trial/awscliv2.zip
+web/app/__pycache__/*

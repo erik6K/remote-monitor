@@ -4,7 +4,6 @@ web/aws_trial/venv/*
 web/app/__pycache__/*
 web/venv/*
 
-
 #These files contains security credentials
 #They are shared via USB
 firmware/AWS Solution/Device_1/arduino_secrets.h

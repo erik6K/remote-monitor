@@ -1,5 +1,13 @@
 body {
-    background-color: #F7F9FB;
+    background-color: #F7F9FB !important;
+}
+
+nav {
+    background-color: #31708e;
+}
+
+nav a {
+    color: #F7F9FB;
 }
 
 .divbig {
@@ -8,10 +16,15 @@ body {
 
 .divin {
     display: inline-block;
-    border: 1px solid #8FC1E3;
+    border: 1px solid #31708e;
+    background-color: #31708e;
     border-radius: 10px;
     width: 20vw;
     height: 20vh;
+}
+
+.divin h1{
+    color: #f7f9fb;
 }
 
 .maindiv {

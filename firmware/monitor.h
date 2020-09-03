@@ -3,6 +3,8 @@
 #define MONITOR_H
 
 #include <Arduino.h>
+#include <string.h>
+#define MEMORY 10
 
 
 class Monitor {
@@ -12,7 +14,7 @@ class Monitor {
 
 		void read_values();
 
-		bool get_main_status();
+		String get_main_status();
 		float get_battery_volts();
 
 	private:
@@ -20,8 +22,10 @@ class Monitor {
 		int main_sensor_pin;
 		int battery_volts_pin;
 
-		int main_value;
+		bool main_value;
 		int battery_value;
+		bool main_history[MEMORY];
+
 };
 
 

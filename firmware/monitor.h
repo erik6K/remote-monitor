@@ -8,8 +8,11 @@
 class Monitor {
 	public:
 		Monitor(int main_sensor_pin, int battery_volts_pin);
+		void Init();
 
-		int poll_main_sensor();
+		void read_values();
+
+		bool get_main_status();
 		float get_battery_volts();
 
 	private:
@@ -17,9 +20,9 @@ class Monitor {
 		int main_sensor_pin;
 		int battery_volts_pin;
 
-		bool main_power_on;
-		float battery_voltage;
-}
+		int main_value;
+		int battery_value;
+};
 
 
 #endif

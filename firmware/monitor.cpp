@@ -13,7 +13,7 @@ Monitor::Monitor(int main_sensor_pin, int battery_volts_pin) {
 
 void Monitor::Init() {
 
-	pinMode(main_sensor_pin, INPUT);
+	pinMode(main_sensor_pin, INPUT_PULLUP);
 	pinMode(battery_volts_pin, INPUT);
 
 

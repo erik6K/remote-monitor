@@ -5,9 +5,9 @@
 
 #include "monitor.h"
 
-#define RADIO_VOX 2
-#define MAIN_SENSOR_PIN 3
-#define BATTERY_VOLTS_PIN 4
+#define RADIO_VOX 15
+#define MAIN_SENSOR_PIN 16
+#define BATTERY_VOLTS_PIN 17
 
 
 Monitor monitor(MAIN_SENSOR_PIN, BATTERY_VOLTS_PIN);
@@ -67,8 +67,8 @@ void Init_Timer() {
 
 void setup() {
 
-	Serial.begin(9600);
-	while (!Serial) {
+	SerialUSB.begin(9600);
+	while (!SerialUSB) {
 	// wait for serial port to connect. Needed for native USB port only
 	}
 
@@ -96,10 +96,10 @@ void loop() {
 	if (flag_update) {
 		flag_update = false;
 
-		monitor.read_values()
+		monitor.read_values();
 
-		Serial.print("M/S: "); Serial.print(monitor.get_main_status());
-		Serial.print(" B: "); Serial.println(monitor.get_battery_volts());
+		SerialUSB.print("M/S: "); SerialUSB.print(monitor.get_main_status());
+		SerialUSB.print(" B: "); SerialUSB.println(monitor.get_battery_volts());
 	}
 
 }

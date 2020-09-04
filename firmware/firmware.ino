@@ -69,7 +69,7 @@ void setup() {
 
 	SerialUSB.begin(9600);
 	while (!SerialUSB) {
-	// wait for serial port to connect. Needed for native USB port only
+	// wait for serial port to connect
 	}
 
 	// RGB LED Pin Init

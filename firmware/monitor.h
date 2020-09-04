@@ -4,7 +4,6 @@
 
 #include <Arduino.h>
 #include <string.h>
-#define MEMORY 10
 
 
 class Monitor {
@@ -24,7 +23,6 @@ class Monitor {
 
 		bool main_value;
 		int battery_value;
-		bool main_history[MEMORY];
 
 };
 

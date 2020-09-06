@@ -5,7 +5,10 @@ web/aws_trial/aws/*
 web/aws_trial/venv/*
 web/aws_trial/awscliv2.zip
 web/app/__pycache__/*
+web/rm.zip
+web/__pycache__/*
 
 #These files contains security credentials
 #They are shared via USB
 firmware/AWS Solution/Device_1/arduino_secrets.h
+firmware/AWS Solution/AWS_IoT_WiFi/arduino_secrets.h

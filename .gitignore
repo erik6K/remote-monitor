@@ -5,6 +5,8 @@ web/app/__pycache__/*
 web/rm.zip
 web/__pycache__/*
 web/venv/*
+web/aws_trial/aws/*
+web/aws_trial/awscliv2.zip
 
 #These files contains security credentials
 #They are shared via USB

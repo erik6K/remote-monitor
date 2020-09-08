@@ -1,3 +1,5 @@
+
+@media only screen and (min-width: 992px){
 body {
     background-color: #F7F9FB !important;
 }
@@ -33,3 +35,120 @@ nav a {
     top: 30vh;
     left: 30vw;
 }
+
+}
+
+@media only screen and (min-width: 768px){
+    body {
+        background-color: #F7F9FB !important;
+    }
+    
+    nav {
+        background-color: #31708e;
+    }
+    
+    nav a {
+        color: #F7F9FB;
+    }
+    
+    .divbig {
+        display: block;
+    }
+    
+    .divin {
+        display: inline-block;
+        border: 1px solid #31708e;
+        background-color: #31708e;
+        border-radius: 10px;
+        width: 23vw;
+        height: 23vh;
+        margin-bottom: 1vh;
+    }
+    
+    .divin h1{
+        color: #f7f9fb;
+    }
+    
+    .maindiv {
+        position: fixed;
+        top: 29vh;
+        left: 29vw;
+    }
+}
+
+@media only screen and (min-width: 600px){
+    body {
+        background-color: #F7F9FB !important;
+    }
+    
+    nav {
+        background-color: #31708e;
+    }
+    
+    nav a {
+        color: #F7F9FB;
+    }
+    
+    .divbig {
+        display: block;
+    }
+    
+    .divin {
+        display: inline-block;
+        border: 1px solid #31708e;
+        background-color: #31708e;
+        border-radius: 10px;
+        width: 26vw;
+        height: 26vh;
+        margin-bottom: 1vh;
+    }
+    
+    .divin h1{
+        color: #f7f9fb;
+    }
+    
+    .maindiv {
+        position: fixed;
+        top: 27vh;
+        left: 25vw;
+    }
+    
+    }
+
+
+    @media only screen and (max-width: 600px){
+        body {
+            background-color: #F7F9FB !important;
+        }
+        
+        nav {
+            background-color: #31708e;
+        }
+        
+        nav a {
+            color: #F7F9FB;
+        }
+        
+        .divbig {
+            display: block;
+        }
+        
+        .divin {
+            border: 1px solid #31708e;
+            background-color: #31708e;
+            border-radius: 10px;
+            width: 65vw;
+            height: 20vh;
+            margin-bottom: 1vh;
+        }
+        
+        .divin h1{
+            color: #f7f9fb;
+        }
+        
+        .maindiv {
+            position: fixed;
+            top: 12vh;
+            left: 19vw;
+        }
+    }

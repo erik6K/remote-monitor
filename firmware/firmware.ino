@@ -9,6 +9,10 @@
 #define MAIN_SENSOR_PIN 16
 #define BATTERY_VOLTS_PIN 17
 
+/*For Client Trial Only*/
+int MAINS_LED_PIN = 6;
+/*---------------------*/
+
 
 Monitor monitor(MAIN_SENSOR_PIN, BATTERY_VOLTS_PIN);
 
@@ -67,10 +71,18 @@ void Init_Timer() {
 
 void setup() {
 
+  /*For Client Trial Only*/
+  pinMode(MAINS_LED_PIN, OUTPUT);
+  /*---------------------*/
+
 	SerialUSB.begin(9600);
+  /*For client meeting only*/
+  delay(2000);
+  /*-----------------------*/
+	/*
 	while (!SerialUSB) {
 	// wait for serial port to connect
-	}
+	}*/
 
 	// RGB LED Pin Init
 	WiFiDrv::pinMode(25, OUTPUT); //GREEN
@@ -97,6 +109,12 @@ void loop() {
 		flag_update = false;
 
 		monitor.read_values();
+
+    if (monitor.get_main_status()=="ON") {
+      digitalWrite(MAINS_LED_PIN, HIGH);
+    } else {
+      digitalWrite(MAINS_LED_PIN, LOW);
+    }
 
 		SerialUSB.print("M/S: "); SerialUSB.print(monitor.get_main_status());
 		SerialUSB.print(" B: "); SerialUSB.println(monitor.get_battery_volts());

@@ -19,22 +19,22 @@ void Monitor::Init() {
 }
 
 void Monitor::read_values() {
-	static uint16_t main_filter = 0;
+	static uint16_t main_filter = 0xffff;
 	int current_mval = 0;
 
 	battery_value = analogRead(battery_volts_pin);
 
 	// a low signal on the input pin means mains is present
-	if (main_value) current_mval = !digitalRead(main_sensor_pin);
-	else current_mval = digitalRead(main_sensor_pin);
+	current_mval = digitalRead(main_sensor_pin);
 
-	// 0xec00 leaves 10 bits for filter
-	main_filter = (main_filter<<1) | current_mval | 0xec00;
+	// 0xfc00 leaves 10 bits for filter
+	main_filter = (main_filter<<1) | current_mval | 0xfc00;
 
 	// mains status toggles when signal has been stable for 10 iterations
-	if (main_filter == 0xfc00) {
-		main_filter = 0;
-		main_value = !main_value;
+	if (main_filter == 0xffff) {
+		main_value = 1;
+	} else {
+    main_value = 0;
 	}
 
 	//SerialUSB.print("FILTER: "); SerialUSB.println(main_filter, BIN);
@@ -46,5 +46,5 @@ float Monitor::get_battery_volts() {
 }
 
 String Monitor::get_main_status() {
-	return main_value ? "ON" : "OFF";
+	return main_value ? "OFF" : "ON";
 }

@@ -15,6 +15,11 @@ Monitor monitor(MAIN_SENSOR_PIN, BATTERY_VOLTS_PIN);
 bool flag_update = 0;
 
 
+volatile int count = 0;
+#define MAXcount 1024
+volatile int sampleDATA[MAXcount] = {0};
+
+/*
 void TC4_Handler() {	// ISR for timer TC4
 	static uint8_t red = 0;
 
@@ -30,6 +35,14 @@ void TC4_Handler() {	// ISR for timer TC4
 	REG_TC4_INTFLAG = TC_INTFLAG_OVF;	// Clear the OVF interrupt flag
 	}
 
+}*/
+
+void ADC_Handler() {
+	if (count < MAXcount) {
+		sampleDATA[count] = REG_ADC_RESULT;
+		count++;
+	}
+	REG_ADC_INTFLAG = ADC_INTENSET_RESRDY; // reset interrupt
 }
 
 void setLEDs(uint8_t red, uint8_t green, uint8_t blue) {
@@ -39,6 +52,7 @@ void setLEDs(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 void Init_Timer() {
+
 	// generic clock (GCLK4) used to clock timers
 	REG_GCLK_GENDIV =	GCLK_GENDIV_DIV(3) |	// Divide the 48MHz clock source by divisor 3: 48MHz/3=16MHz
 						GCLK_GENDIV_ID(4);		// Configure Generic Clock (GCLK) 4
@@ -50,11 +64,12 @@ void Init_Timer() {
 						GCLK_GENCTRL_ID(4);          // configure GCLK4
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	REG_GCLK_CLKCTRL =	GCLK_CLKCTRL_CLKEN |		// Enable GCLK4 to TC4 and TC5
+	REG_GCLK_CLKCTRL =	GCLK_CLKCTRL_CLKEN |		// Enable GCLK4
 						GCLK_CLKCTRL_GEN_GCLK4 |	// Select GCLK4
 						GCLK_CLKCTRL_ID_TC4_TC5;	// GCLK4 to TC4 and TC5
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
+	// timer setup
 	REG_TC4_INTFLAG |= TC_INTFLAG_MC1 | TC_INTFLAG_MC0 | TC_INTFLAG_OVF;	// Clear the interrupt flags
 	REG_TC4_INTENSET = TC_INTENSET_OVF;										// Enable TC4 interrupts
 
@@ -82,24 +97,36 @@ void setup() {
 
 	monitor.Init();
 
-	// set adc resolution to 12 bits for MKR board
-	analogReadResolution(12);
+	//SerialUSB.println("ADC READY");
 
-
+	monitor.trig_ADC();
 	// initialise timer
-	Init_Timer();
+	//Init_Timer();
 
 }
 
 void loop() {
 
+	if (count == MAXcount) {
+		REG_ADC_CTRLA &= ~ADC_CTRLA_ENABLE; // disable adc
+		while (ADC->STATUS.bit.SYNCBUSY);
+
+		for (int i=0; i<MAXcount; i++) {
+			SerialUSB.print(i);
+			SerialUSB.print(',');
+			SerialUSB.println(sampleDATA[i]);
+		}
+
+		while(1);
+	}
+
 	if (flag_update) {
 		flag_update = false;
 
-		monitor.read_values();
+		//monitor.read_values();
 
-		SerialUSB.print("M/S: "); SerialUSB.print(monitor.get_main_status());
-		SerialUSB.print(" B: "); SerialUSB.println(monitor.get_battery_volts());
+	//	SerialUSB.print("M/S: "); SerialUSB.print(monitor.get_main_status());
+	//	SerialUSB.print(" B: "); SerialUSB.println(monitor.get_battery_volts());
 	}
 
 }

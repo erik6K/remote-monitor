@@ -6,6 +6,8 @@
 #include <string.h>
 
 
+
+
 class Monitor {
 	public:
 		Monitor(int main_sensor_pin, int battery_volts_pin);
@@ -16,7 +18,11 @@ class Monitor {
 		String get_main_status();
 		float get_battery_volts();
 
+		void trig_ADC();
+
 	private:
+
+		void init_ADC();
 
 		int main_sensor_pin;
 		int battery_volts_pin;

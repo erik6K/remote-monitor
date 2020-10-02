@@ -2,6 +2,35 @@
 #include "monitor.h"
 
 
+void ADC_Handler() {
+
+	// returns false once all samples have been taken
+	if (monitor.add_sample(REG_ADC_RESULT));
+	else {
+		REG_ADC_CTRLA &= ~ADC_CTRLA_ENABLE; // disable adc
+		while (ADC->STATUS.bit.SYNCBUSY);
+	}
+
+
+	REG_ADC_INTFLAG = ADC_INTENSET_RESRDY; // reset interrupt
+}
+
+bool Monitor::add_sample(int smpl) {
+
+	mains_samples[sample_index] = smpl;
+	sample_index++;
+
+	if (sample_index == SAMPLES) {
+		adc_BUSY = false;
+		return false;
+	}
+	else return true;
+
+}
+
+int Monitor::get_sample(int ind) {
+	return mains_samples[ind];
+}
 
 Monitor::Monitor(int main_sensor_pin, int battery_volts_pin) {
 
@@ -9,8 +38,7 @@ Monitor::Monitor(int main_sensor_pin, int battery_volts_pin) {
 	this->battery_volts_pin = battery_volts_pin;
 
 	battery_value = 0;
-	main_value = false;
- 
+
 }
 
 void Monitor::Init() {
@@ -19,20 +47,21 @@ void Monitor::Init() {
 	pinMode(6, INPUT);
 	pinMode(7, INPUT);
 
-	init_ADC();
+	init_ADC_Pins();
+	init_ADC_Clock();
 
 }
 
-void Monitor::init_ADC() {
+void Monitor::init_ADC_Pins() {
 
-	//REG_PAC2_WPCLR |= 0x10000; // clear write protect for adc
-
-	// pins
 	PORT->Group[PORTB].DIRCLR.reg = PORT_PB02;
 
 	PORT->Group[PORTB].PINCFG[2].bit.PMUXEN = 1;
 	PORT->Group[PORTB].PMUX[1].reg = PORT_PMUX_PMUXE_B; // PORTB(2*[1]) = PORTB02
 
+}
+
+void Monitor::init_ADC_Clock() {
 
 	// clock
 	REG_PM_APBCMASK |= PM_APBCMASK_ADC;
@@ -45,6 +74,14 @@ void Monitor::init_ADC() {
 
 	REG_GCLK_CLKCTRL |= GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(3) | GCLK_CLKCTRL_ID(30); // 30 is ADC
 	while (GCLK->STATUS.bit.SYNCBUSY);
+
+}
+
+void Monitor::init_ADC_Freerun() {
+
+	//REG_PAC2_WPCLR |= 0x10000; // clear write protect for adc
+	REG_ADC_CTRLA |= ADC_CTRLA_SWRST; // reset adc
+	while (ADC->STATUS.bit.SYNCBUSY);
 
 	// adc
 
@@ -84,30 +121,26 @@ void Monitor::init_ADC() {
 
 }
 
+void Monitor::take_mains_samples() {
+
+	adc_BUSY = true;
+	sample_index = 0;
+	init_ADC_Freerun();
+
+	trig_ADC();
+}
+
+bool Monitor::adc_busy() {
+	return adc_BUSY;
+}
+
 void Monitor::trig_ADC() {
 	REG_ADC_SWTRIG |= ADC_SWTRIG_START;
 }
 
-void Monitor::read_values() {
-	static uint16_t main_filter = 0;
-	int current_mval = 0;
-
+void Monitor::sample_battery() {
 	battery_value = analogRead(battery_volts_pin);
 
-	// a low signal on the input pin means mains is present
-	if (main_value) current_mval = !digitalRead(main_sensor_pin);
-	else current_mval = digitalRead(main_sensor_pin);
-
-	// 0xec00 leaves 10 bits for filter
-	main_filter = (main_filter<<1) | current_mval | 0xec00;
-
-	// mains status toggles when signal has been stable for 10 iterations
-	if (main_filter == 0xfc00) {
-		main_filter = 0;
-		main_value = !main_value;
-	}
-
-	//SerialUSB.print("FILTER: "); SerialUSB.println(main_filter, BIN);
 }
 
 
@@ -115,6 +148,4 @@ float Monitor::get_battery_volts() {
 	return (float)battery_value / 1240.91;
 }
 
-String Monitor::get_main_status() {
-	return main_value ? "ON" : "OFF";
-}
+Monitor monitor(16, 17);

@@ -9,41 +9,18 @@
 #define MAIN_SENSOR_PIN 16
 #define BATTERY_VOLTS_PIN 17
 
+#define DISABLE_TIMER()	REG_TC4_CTRLA &= ~TC_CTRLA_ENABLE; \
+						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 
-Monitor monitor(MAIN_SENSOR_PIN, BATTERY_VOLTS_PIN);
+#define ENABLE_TIMER() 	REG_TC4_CTRLA |= TC_CTRLA_ENABLE; \
+						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 
-bool flag_update = 0;
+enum State { ANALYSE, PERIODIC };
+State g_STATE;
+
+volatile bool flag_update = 0;
 
 
-volatile int count = 0;
-#define MAXcount 1024
-volatile int sampleDATA[MAXcount] = {0};
-
-/*
-void TC4_Handler() {	// ISR for timer TC4
-	static uint8_t red = 0;
-
-	// Check for overflow (OVF) interrupt
-	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
-		red = ~red;
-   		//setLEDs(red, 0, 125);
-   		digitalWrite(LED_BUILTIN, red);
-
-   		flag_update = true;
-      
-
-	REG_TC4_INTFLAG = TC_INTFLAG_OVF;	// Clear the OVF interrupt flag
-	}
-
-}*/
-
-void ADC_Handler() {
-	if (count < MAXcount) {
-		sampleDATA[count] = REG_ADC_RESULT;
-		count++;
-	}
-	REG_ADC_INTFLAG = ADC_INTENSET_RESRDY; // reset interrupt
-}
 
 void setLEDs(uint8_t red, uint8_t green, uint8_t blue) {
   WiFiDrv::analogWrite(25, green);
@@ -95,38 +72,81 @@ void setup() {
 	// <pin initialisations here>
 	pinMode(LED_BUILTIN, OUTPUT);
 
+	analogReadResolution(12);
+
 	monitor.Init();
 
-	//SerialUSB.println("ADC READY");
-
-	monitor.trig_ADC();
 	// initialise timer
-	//Init_Timer();
+	Init_Timer();
+
+	g_STATE = PERIODIC;
 
 }
 
 void loop() {
 
-	if (count == MAXcount) {
-		REG_ADC_CTRLA &= ~ADC_CTRLA_ENABLE; // disable adc
-		while (ADC->STATUS.bit.SYNCBUSY);
+	switch(g_STATE)
+	{
+		case PERIODIC:
 
-		for (int i=0; i<MAXcount; i++) {
+			if (flag_update) {
+				flag_update = false;
+
+				//monitor.sample_battery();
+
+				SerialUSB.print("Vb: ");
+				SerialUSB.println(monitor.get_battery_volts());
+			}
+
+			break;
+
+		case ANALYSE:
+
+			SerialUSB.println("ADC READINGS");
+
+			monitor.take_mains_samples();
+			while(monitor.adc_busy());
+
+			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
 			SerialUSB.print(',');
-			SerialUSB.println(sampleDATA[i]);
-		}
+			SerialUSB.println(monitor.get_sample(i));
+			}
 
-		while(1);
+			// re-enable timer
+			g_STATE = PERIODIC;
+			ENABLE_TIMER()
+
+			break;
 	}
 
-	if (flag_update) {
-		flag_update = false;
+}
 
-		//monitor.read_values();
+/* ------Interrupt Service Routines------ */
 
-	//	SerialUSB.print("M/S: "); SerialUSB.print(monitor.get_main_status());
-	//	SerialUSB.print(" B: "); SerialUSB.println(monitor.get_battery_volts());
+void TC4_Handler() {	// ISR for timer TC4
+	static uint8_t counter = 0;
+	static uint8_t red = 0;
+
+	// Check for overflow (OVF) interrupt
+	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
+
+		// sample battery voltage 10 times before state change
+		if (counter < 10) {
+			red = ~red;
+	   		digitalWrite(LED_BUILTIN, red);
+
+	   		flag_update = true;
+	   		counter++;
+	   	}
+	   	else {
+	   		counter = 0;
+	   		g_STATE = ANALYSE;
+	   		DISABLE_TIMER()
+	   	}
+      
+
+	REG_TC4_INTFLAG = TC_INTFLAG_OVF;	// Clear the OVF interrupt flag
 	}
 
 }

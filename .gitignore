@@ -6,3 +6,4 @@ firmware/AWS Solution/Device_1/arduino_secrets.h
 web/venv/*
 web/__pycache__/*
 web/app/__pycache__/*
+*.pyc

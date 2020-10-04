@@ -1,0 +1,19 @@
+#ifndef DEFS_H
+#define DEFS_H
+
+
+
+#define DISABLE_TIMER()	REG_TC4_CTRLA &= ~TC_CTRLA_ENABLE; \
+						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
+
+#define ENABLE_TIMER() 	REG_TC4_CTRLA |= TC_CTRLA_ENABLE; \
+						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
+
+#define DISABLE_ADC()	REG_ADC_CTRLA &= ~ADC_CTRLA_ENABLE; \
+						while (ADC->STATUS.bit.SYNCBUSY);
+
+#define ENABLE_ADC()	REG_ADC_CTRLA |= ADC_CTRLA_ENABLE; \
+						while (ADC->STATUS.bit.SYNCBUSY);
+
+
+#endif

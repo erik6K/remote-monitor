@@ -8,7 +8,7 @@
 #define SAMPLES 512
 #define FS 13392.857 // sample rate
 
-
+enum ADC_State { FREERUN, SINGLE };
 
 class Monitor {
 	public:
@@ -16,7 +16,7 @@ class Monitor {
 		void Init();
 
 
-		void sample_battery();
+		void take_battery_sample();
 		float get_battery_volts();
 
 		void take_mains_samples();
@@ -24,18 +24,22 @@ class Monitor {
 
 		void trig_ADC();
 
-		bool add_sample(int smpl);
-		int get_sample(int ind);
+		bool add_mains_sample(int smpl);
+		int get_mains_sample(int ind);
+		void record_battery_sample(int smpl);
 
 		//void remove_DC();
 		void compute_fft();
 		int verify_50Hz();
+
+		ADC_State adc_state;
 
 	private:
 
 		void init_ADC_Pins();
 		void init_ADC_Clock();
 		void init_ADC_Freerun();
+    void init_ADC_Single();
 
 		int16_t mains_samples[SAMPLES];
 		/*
@@ -89,7 +93,7 @@ class Monitor {
 		int main_sensor_pin;
 		int battery_volts_pin;
 
-		int battery_value;
+		volatile int battery_value;
 
 };
 extern Monitor monitor;

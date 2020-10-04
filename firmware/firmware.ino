@@ -4,20 +4,16 @@
 #include <utility/wifi_drv.h>
 
 #include "monitor.h"
+#include "defs.h"
 
 #define RADIO_VOX 15
 #define MAIN_SENSOR_PIN 16
 #define BATTERY_VOLTS_PIN 17
 
-#define DISABLE_TIMER()	REG_TC4_CTRLA &= ~TC_CTRLA_ENABLE; \
-						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
-
-#define ENABLE_TIMER() 	REG_TC4_CTRLA |= TC_CTRLA_ENABLE; \
-						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 
 enum State { PERIODIC, ANALYSE, DEBUG };
-State g_STATE;
 
+volatile State g_STATE;
 volatile bool flag_update = 0;
 
 
@@ -92,7 +88,7 @@ void loop() {
 			if (flag_update) {
 				flag_update = false;
 
-				//monitor.sample_battery();
+				monitor.take_battery_sample();
 
 				SerialUSB.print("Vb: ");
 				SerialUSB.println(monitor.get_battery_volts());
@@ -110,7 +106,7 @@ void loop() {
 			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
 			SerialUSB.print(',');
-			SerialUSB.println(monitor.get_sample(i));
+			SerialUSB.println(monitor.get_mains_sample(i));
 			}*/
 
 			monitor.compute_fft();

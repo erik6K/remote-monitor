@@ -1,21 +1,31 @@
 
 #include "monitor.h"
+#include "defs.h"
 
 
 void ADC_Handler() {
 
-	// returns false once all samples have been taken
-	if (monitor.add_sample(REG_ADC_RESULT));
-	else {
-		REG_ADC_CTRLA &= ~ADC_CTRLA_ENABLE; // disable adc
-		while (ADC->STATUS.bit.SYNCBUSY);
+	switch (monitor.adc_state) {
+
+		case FREERUN:
+			// returns false once all samples have been taken
+			if (monitor.add_mains_sample(REG_ADC_RESULT));
+			else {
+				DISABLE_ADC();
+			}
+			break;
+
+		case SINGLE:
+			// single reading
+			monitor.record_battery_sample(REG_ADC_RESULT);
+			break;
 	}
 
 
 	REG_ADC_INTFLAG = ADC_INTENSET_RESRDY; // reset interrupt
 }
 
-bool Monitor::add_sample(int smpl) {
+bool Monitor::add_mains_sample(int smpl) {
 
 	mains_samples[sample_index] = smpl;
 	sample_index++;
@@ -28,8 +38,12 @@ bool Monitor::add_sample(int smpl) {
 
 }
 
-int Monitor::get_sample(int ind) {
+int Monitor::get_mains_sample(int ind) {
 	return mains_samples[ind];
+}
+
+void Monitor::record_battery_sample(int smpl) {
+	battery_value = smpl;
 }
 
 void Monitor::compute_fft() {
@@ -77,10 +91,13 @@ void Monitor::Init() {
 
 void Monitor::init_ADC_Pins() {
 
-	PORT->Group[PORTB].DIRCLR.reg = PORT_PB02;
+	PORT->Group[PORTB].DIRCLR.reg |= PORT_PB02 | PORT_PB03; // set pins A1 and A2 as input
 
 	PORT->Group[PORTB].PINCFG[2].bit.PMUXEN = 1;
-	PORT->Group[PORTB].PMUX[1].reg = PORT_PMUX_PMUXE_B; // PORTB(2*[1]) = PORTB02
+	PORT->Group[PORTB].PINCFG[3].bit.PMUXEN = 1;
+
+	// PORTB(2*[1]) = PORTB02, (2*[1] + 1) = PORTB03
+	PORT->Group[PORTB].PMUX[1].reg = PORT_PMUX_PMUXE_B | PORT_PMUX_PMUXO_B;
 
 }
 
@@ -142,6 +159,45 @@ void Monitor::init_ADC_Freerun() {
 	NVIC_EnableIRQ(ADC_IRQn); // enable adc interrupts
 	NVIC_SetPriority(ADC_IRQn, 0); // highest priority
 
+	adc_state = FREERUN;
+}
+
+void Monitor::init_ADC_Single() {
+
+	REG_ADC_CTRLA |= ADC_CTRLA_SWRST; // reset adc
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	REG_ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC1;
+
+	REG_ADC_AVGCTRL |= ADC_AVGCTRL_SAMPLENUM_1;
+
+	REG_ADC_SAMPCTRL = ADC_SAMPCTRL_SAMPLEN(0);
+
+	// Pin A1 on arduno corresponds to PB02 and AIN10
+	REG_ADC_INPUTCTRL = ADC_INPUTCTRL_GAIN_1X | ADC_INPUTCTRL_MUXNEG_GND | ADC_INPUTCTRL_MUXPOS_PIN11;
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	REG_ADC_CTRLB = ADC_CTRLB_RESSEL_12BIT | ADC_CTRLB_PRESCALER_DIV512;
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	REG_ADC_WINCTRL = ADC_WINCTRL_WINMODE_DISABLE;
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	REG_ADC_EVCTRL |= ADC_EVCTRL_STARTEI;
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	REG_ADC_CTRLA |= ADC_CTRLA_ENABLE;
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	// interrupt setup
+
+	REG_ADC_INTENSET |= ADC_INTENSET_RESRDY; // result ready int
+	while (ADC->STATUS.bit.SYNCBUSY);
+
+	NVIC_EnableIRQ(ADC_IRQn); // enable adc interrupts
+	NVIC_SetPriority(ADC_IRQn, 0); // highest priority
+
+	adc_state = SINGLE;
 }
 
 void Monitor::take_mains_samples() {
@@ -161,9 +217,12 @@ void Monitor::trig_ADC() {
 	REG_ADC_SWTRIG |= ADC_SWTRIG_START;
 }
 
-void Monitor::sample_battery() {
-	battery_value = analogRead(battery_volts_pin);
+void Monitor::take_battery_sample() {
+	if (adc_state != SINGLE) {
+		init_ADC_Single();
+	}
 
+	trig_ADC();
 }
 
 

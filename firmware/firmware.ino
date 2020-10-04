@@ -15,16 +15,16 @@
 #define ENABLE_TIMER() 	REG_TC4_CTRLA |= TC_CTRLA_ENABLE; \
 						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);
 
-enum State { ANALYSE, PERIODIC };
+enum State { PERIODIC, ANALYSE, DEBUG };
 State g_STATE;
 
 volatile bool flag_update = 0;
 
 
 
-void setLEDs(uint8_t red, uint8_t green, uint8_t blue) {
+void setLEDs(uint8_t led, uint8_t green, uint8_t blue) {
   WiFiDrv::analogWrite(25, green);
-  WiFiDrv::analogWrite(26, red);
+  WiFiDrv::analogWrite(26, led);
   WiFiDrv::analogWrite(27, blue);
 }
 
@@ -66,13 +66,13 @@ void setup() {
 
 	// RGB LED Pin Init
 	WiFiDrv::pinMode(25, OUTPUT); //GREEN
-	WiFiDrv::pinMode(26, OUTPUT); //RED
+	WiFiDrv::pinMode(26, OUTPUT); //lED
 	WiFiDrv::pinMode(27, OUTPUT); //BLUE
 
 	// <pin initialisations here>
 	pinMode(LED_BUILTIN, OUTPUT);
 
-	analogReadResolution(12);
+
 
 	monitor.Init();
 
@@ -106,16 +106,32 @@ void loop() {
 
 			monitor.take_mains_samples();
 			while(monitor.adc_busy());
-
+			/*
 			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
 			SerialUSB.print(',');
 			SerialUSB.println(monitor.get_sample(i));
-			}
+			}*/
+
+			monitor.compute_fft();
+
+			//SerialUSB.print("50Hz: ");
+			SerialUSB.println(monitor.verify_50Hz());
 
 			// re-enable timer
 			g_STATE = PERIODIC;
 			ENABLE_TIMER()
+
+			break;
+
+		case DEBUG:
+
+			monitor.compute_fft();
+
+			SerialUSB.print("50Hz: ");
+			SerialUSB.println(monitor.verify_50Hz());
+
+			while(1);
 
 			break;
 	}
@@ -126,15 +142,15 @@ void loop() {
 
 void TC4_Handler() {	// ISR for timer TC4
 	static uint8_t counter = 0;
-	static uint8_t red = 0;
+	static uint8_t led = 0;
 
 	// Check for overflow (OVF) interrupt
 	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
 
 		// sample battery voltage 10 times before state change
 		if (counter < 10) {
-			red = ~red;
-	   		digitalWrite(LED_BUILTIN, red);
+			led = ~led;
+	   		digitalWrite(LED_BUILTIN, led);
 
 	   		flag_update = true;
 	   		counter++;

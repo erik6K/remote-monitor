@@ -32,6 +32,29 @@ int Monitor::get_sample(int ind) {
 	return mains_samples[ind];
 }
 
+void Monitor::compute_fft() {
+	ZeroFFT(mains_samples, SAMPLES);
+}
+
+/* 50Hz must be at least 4x larger than any other frequency to be considered present */
+int Monitor::verify_50Hz() {
+	int mag_50Hz = mains_samples[FFT_INDEX(50, FS, SAMPLES)];
+	SerialUSB.print("50Hz Magnitude: "); SerialUSB.println(mag_50Hz);
+
+	int maximum = mag_50Hz;
+	int maximum_i = 1;
+
+	for (int i = 3; i < (SAMPLES >> 1); i++) {
+		if (maximum < (mains_samples[i]*4)) {
+			maximum = mains_samples[i]*4;
+			maximum_i = i;
+			
+		}
+	}
+	SerialUSB.print(FFT_BIN(maximum_i, FS, SAMPLES)); SerialUSB.print(": "); SerialUSB.println(maximum);
+	return (mag_50Hz == maximum ? 1 : 0);
+}
+
 Monitor::Monitor(int main_sensor_pin, int battery_volts_pin) {
 
 	this->main_sensor_pin = main_sensor_pin;

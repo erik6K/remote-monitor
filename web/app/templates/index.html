@@ -8,17 +8,19 @@
   <div class="device" id='{{ device["id"] }}'>
     <h1>{{ device['displayName'] }}</h1>
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-xs-6">
         <h2>Mains Status</h2>
-        <p id='{{ device["id"] }}_mains'>?</p>
+        <p id='{{ device["id"] }}_mains_value' class="telemetry"><i class='fa fa-spinner fa-spin'></i></p>
+        <p>Last sample taken <span data-time="" class="time" id='{{ device["id"] }}_mains_time'><i class='fa fa-spinner fa-spin'></i></span> ago</p>  
       </div>
-      <div class="col-md-6">
+      <div class="col-xs-6">
         <h2>Battery Voltage</h2>
-        <p id='{{ device["id"] }}_battery'>?</p>
+        <p id='{{ device["id"] }}_battery_value' class="telemetry"><i class='fa fa-spinner fa-spin'></i></p>
+        <p>Last sample taken <span data-time="" class="time" id='{{ device["id"] }}_battery_time'><i class='fa fa-spinner fa-spin'></i></span> ago</p>  
+      </div>
+        
       </div>
     </div>
-  </div>
-
     {% endif %}
 {% endfor %} 
 </div>

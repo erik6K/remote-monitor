@@ -2,6 +2,10 @@
 #define DEFS_H
 
 
+#define RADIO_VOX 15
+#define MAIN_SENSOR_PIN 16
+#define BATTERY_VOLTS_PIN 17
+
 
 #define DISABLE_TIMER()	REG_TC4_CTRLA &= ~TC_CTRLA_ENABLE; \
 						while (TC4->COUNT16.STATUS.bit.SYNCBUSY);

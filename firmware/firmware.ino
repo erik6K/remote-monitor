@@ -6,10 +6,6 @@
 #include "monitor.h"
 #include "defs.h"
 
-#define RADIO_VOX 15
-#define MAIN_SENSOR_PIN 16
-#define BATTERY_VOLTS_PIN 17
-
 
 enum State { PERIODIC, ANALYSE, DEBUG };
 
@@ -69,7 +65,6 @@ void setup() {
 
 	// LED Pin is D6 - also connected to mains sensor input on prototype board
 	//pinMode(LED_BUILTIN, OUTPUT);
-	pinMode(9, OUTPUT);
 
 
 
@@ -114,7 +109,7 @@ void loop() {
 			monitor.remove_DC();
 			monitor.compute_fft();
 
-			//SerialUSB.print("50Hz: ");
+			SerialUSB.print("50Hz: ");
 			SerialUSB.println(monitor.verify_50Hz());
 
 			// re-enable timer

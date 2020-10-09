@@ -66,7 +66,10 @@ void setup() {
 	WiFiDrv::pinMode(27, OUTPUT); //BLUE
 
 	// <pin initialisations here>
-	pinMode(LED_BUILTIN, OUTPUT);
+
+	// LED Pin is D6 - also connected to mains sensor input on prototype board
+	//pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(9, OUTPUT);
 
 
 
@@ -90,8 +93,8 @@ void loop() {
 
 				monitor.take_battery_sample();
 
-				SerialUSB.print("Vb: ");
-				SerialUSB.println(monitor.get_battery_volts());
+			//	SerialUSB.print("Vb: ");
+			//	SerialUSB.println(monitor.get_battery_volts());
 			}
 
 			break;
@@ -108,7 +111,7 @@ void loop() {
 			SerialUSB.print(',');
 			SerialUSB.println(monitor.get_mains_sample(i));
 			}*/
-
+			monitor.remove_DC();
 			monitor.compute_fft();
 
 			//SerialUSB.print("50Hz: ");
@@ -122,10 +125,16 @@ void loop() {
 
 		case DEBUG:
 
-			monitor.compute_fft();
+			monitor.take_mains_samples();
+			while(monitor.adc_busy());
 
-			SerialUSB.print("50Hz: ");
-			SerialUSB.println(monitor.verify_50Hz());
+			monitor.remove_DC();
+			
+			for (int i=0; i<SAMPLES; i++) {
+			SerialUSB.print(i);
+			SerialUSB.print(',');
+			SerialUSB.println(monitor.get_mains_sample(i));
+			}
 
 			while(1);
 
@@ -138,15 +147,15 @@ void loop() {
 
 void TC4_Handler() {	// ISR for timer TC4
 	static uint8_t counter = 0;
-	static uint8_t led = 0;
+	//static uint8_t led = 0;
 
 	// Check for overflow (OVF) interrupt
 	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
 
 		// sample battery voltage 10 times before state change
 		if (counter < 10) {
-			led = ~led;
-	   		digitalWrite(LED_BUILTIN, led);
+			//led = ~led;
+	   		//digitalWrite(LED_BUILTIN, led);
 
 	   		flag_update = true;
 	   		counter++;

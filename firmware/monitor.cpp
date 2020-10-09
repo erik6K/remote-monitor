@@ -4,10 +4,12 @@
 
 
 void ADC_Handler() {
-
+	static uint8_t toggle = 0; // debug
 	switch (monitor.adc_state) {
 
 		case FREERUN:
+			toggle = ~toggle;
+			digitalWrite(9, toggle);
 			// returns false once all samples have been taken
 			if (monitor.add_mains_sample(REG_ADC_RESULT));
 			else {
@@ -46,7 +48,27 @@ void Monitor::record_battery_sample(int smpl) {
 	battery_value = smpl;
 }
 
+void Monitor::remove_DC() {
+	int min = 4096;
+	int max = 0;
+
+	for (int i = 0; i < SAMPLES; i++) {
+		if (mains_samples[i] < min) min = mains_samples[i];
+		if (mains_samples[i] > max) max = mains_samples[i];
+	}
+
+	SerialUSB.print("Min: "); SerialUSB.println(min);
+	SerialUSB.print("Max: "); SerialUSB.println(max);
+
+	int offset = ((max - min) / 2) + min;
+
+	for (int i = 0; i < SAMPLES; i++) {
+		mains_samples[i] -= offset;
+	}
+}
+
 void Monitor::compute_fft() {
+	
 	ZeroFFT(mains_samples, SAMPLES);
 }
 
@@ -58,7 +80,10 @@ int Monitor::verify_50Hz() {
 	int maximum = mag_50Hz;
 	int maximum_i = 1;
 
-	for (int i = 3; i < (SAMPLES >> 1); i++) {
+	for (int i = 0; i < (SAMPLES >> 1); i++) {
+		if (i < 18) {
+			SerialUSB.print(FFT_BIN(i, FS, SAMPLES)); SerialUSB.print(": "); SerialUSB.println(mains_samples[i]);
+		}
 		if (maximum < (mains_samples[i]*4)) {
 			maximum = mains_samples[i]*4;
 			maximum_i = i;

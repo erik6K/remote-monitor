@@ -4,7 +4,7 @@ import numpy as np
 import scipy.fftpack
 
 # Data for plotting
-xR, y = np.loadtxt('data_512_2khz.txt', delimiter=',', unpack=True)
+xR, y = np.loadtxt('data1.txt', delimiter=',', unpack=True)
 y = y[511:]
 xR = xR[511:]
 

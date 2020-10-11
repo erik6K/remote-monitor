@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "src/Adafruit_Zero_FFT_Library/Adafruit_ZeroFFT.h"
+#include "defs.h"
 
 /* Settings for FFT */
 #define SAMPLES 1024
@@ -42,12 +43,12 @@ class Monitor {
 
 
 		int16_t mains_samples[SAMPLES];
-		
 
-		int sample_index;
+		int battery_samples[NUM_BATT_SAMPLES];
+
+		int mains_index;
+		int battery_index;
 		bool adc_BUSY;
-
-		volatile int battery_value;
 
 };
 extern Monitor monitor;

@@ -1,12 +1,8 @@
-
 #include "monitor.h"
-#include "defs.h"
 
 Monitor monitor;
 
 Monitor::Monitor() {
-
-	battery_value = 0;
 
 }
 
@@ -55,7 +51,7 @@ void Monitor::init_ADC_Freerun() {
 	/* 12 bits conversion takes 7 clock cycles 
 	   48MHz / (7 * 512) = 13392.857 Hz Fs     */
 
-	REG_ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC1;
+	REG_ADC_REFCTRL = ADC_REFCTRL_REFSEL_AREFA;
 
 	REG_ADC_AVGCTRL |= ADC_AVGCTRL_SAMPLENUM_1;
 
@@ -132,10 +128,10 @@ void Monitor::remove_DC() {
 		if (mains_samples[i] < min) min = mains_samples[i];
 		if (mains_samples[i] > max) max = mains_samples[i];
 	}
-	/*
+	
 	SerialUSB.print("Min: "); SerialUSB.println(min);
 	SerialUSB.print("Max: "); SerialUSB.println(max);
-	*/
+	
 	int offset = ((max - min) / 2) + min;
 
 	for (int i = 0; i < SAMPLES; i++) {
@@ -147,38 +143,45 @@ void Monitor::compute_fft() {
 	ZeroFFT(mains_samples, SAMPLES);
 }
 
-/* 50Hz must be at least 3x larger than any other frequency to be considered present */
 int Monitor::verify_50Hz() {
 
-	uint8_t histogram[200] = {0};
+	uint8_t histogram[256] = {0};
 
-	int mag_50Hz = mains_samples[3] + mains_samples[4];
+	int mag_50Hz = (mains_samples[3] + mains_samples[4]) / 2;
 
 
 	for (int i = 0; i < (SAMPLES >> 1); i++) {
-		int mag = min(mains_samples[i], 200);
-		histogram[mag]++;
+
+		int mag = min(mains_samples[i], 255);
+		histogram[mag] += 1;
 	}
+
 
 	int maxh = 0;
 	int noise_floor = 0;
 
-	for (int i = 0; i <= 200; i++) {
-		if (histogram[i] > maxh) {
+	for (int i = 0; i < 256; i++) {
+		if (maxh < histogram[i]) {
+			/*
+			SerialUSB.print("prev: "); SerialUSB.println(maxh);
+			SerialUSB.print("new: "); SerialUSB.println(histogram[i]);
+			SerialUSB.print("i: "); SerialUSB.println(i);
+			*/
 			maxh = histogram[i];
-			noise_floor = i;
+			noise_floor = i + 1;
 		}
 	}
-
-	return (mag_50Hz > noise_floor*3 ? 1 : 0);
+//	SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
+//	SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
+	return (mag_50Hz > noise_floor*5 ? 1 : 0);
 }
 
 bool Monitor::add_mains_sample(int smpl) {
 
-	mains_samples[sample_index] = smpl;
-	sample_index++;
+	mains_samples[mains_index] = smpl;
+	mains_index++;
 
-	if (sample_index == SAMPLES) {
+	if (mains_index == SAMPLES) {
 		adc_BUSY = false;
 		return false;
 	}
@@ -187,7 +190,11 @@ bool Monitor::add_mains_sample(int smpl) {
 }
 
 void Monitor::record_battery_sample(int smpl) {
-	battery_value = smpl;
+	static int ind = 0;
+
+	battery_samples[ind] = smpl;
+
+	ind = (ind + 1) % NUM_BATT_SAMPLES;
 }
 
 int Monitor::get_mains_sample(int ind) {
@@ -197,7 +204,7 @@ int Monitor::get_mains_sample(int ind) {
 void Monitor::take_mains_samples() {
 
 	adc_BUSY = true;
-	sample_index = 0;
+	mains_index = 0;
 	init_ADC_Freerun();
 
 	trig_ADC();
@@ -220,7 +227,20 @@ void Monitor::take_battery_sample() {
 
 
 float Monitor::get_battery_volts() {
-	return (float)battery_value / 1240.91;
+	int min = 4096;
+	int avg = 0;
+	float result[2];
+
+	for (int i = 0; i < NUM_BATT_SAMPLES; i++) {
+		if (min > battery_samples[i]) min = battery_samples[i];
+		avg += battery_samples[i];
+	}
+	avg = avg / NUM_BATT_SAMPLES;
+
+	result[0] = (float)min / 1240.91;
+	result[1] = (float)avg / 1240.91;
+
+	return result[0];
 }
 
 /* ------ADC Interrupt Service Routine------ */

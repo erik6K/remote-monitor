@@ -109,8 +109,8 @@ void loop() {
 			monitor.remove_DC();
 			monitor.compute_fft();
 
-			SerialUSB.print("50Hz: ");
-			SerialUSB.println(monitor.verify_50Hz());
+			//SerialUSB.print("50Hz: ");
+			SerialUSB.println(monitor.verify_50Hz() ? "Yes" : "No");
 
 			// re-enable timer
 			g_STATE = PERIODIC;
@@ -148,7 +148,7 @@ void TC4_Handler() {	// ISR for timer TC4
 	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
 
 		// sample battery voltage 10 times before state change
-		if (counter < 10) {
+		if (counter < NUM_BATT_SAMPLES) {
 			//led = ~led;
 	   		//digitalWrite(LED_BUILTIN, led);
 

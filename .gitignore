@@ -5,3 +5,4 @@ web/aws_trial/awscliv2.zip
 firmware/AWS Solution/Device_1/arduino_secrets.h
 web/venv/*
 web/__pycache__/*
+*.pyc

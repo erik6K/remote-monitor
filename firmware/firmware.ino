@@ -1,9 +1,10 @@
 
 #include <SPI.h>
-#include <WiFiNINA.h>
-#include <utility/wifi_drv.h>
+//#include <WiFiNINA.h>
+//#include <utility/wifi_drv.h>
 
 #include "monitor.h"
+#include "reporter.h"
 #include "defs.h"
 
 
@@ -13,13 +14,13 @@ volatile State g_STATE;
 volatile bool flag_update = 0;
 
 
-/* unused function for controlling rgb led */
+/* unused function for controlling rgb led 
 void setLEDs(uint8_t led, uint8_t green, uint8_t blue) {
   WiFiDrv::analogWrite(25, green);
   WiFiDrv::analogWrite(26, led);
   WiFiDrv::analogWrite(27, blue);
 }
-
+*/
 /* main timer initialisation */
 void Init_Timer() {
 
@@ -58,17 +59,18 @@ void setup() {
 	}
 
 	// RGB LED Pin Init
-	WiFiDrv::pinMode(25, OUTPUT); //GREEN
-	WiFiDrv::pinMode(26, OUTPUT); //lED
-	WiFiDrv::pinMode(27, OUTPUT); //BLUE
+//	WiFiDrv::pinMode(25, OUTPUT); //GREEN
+//	WiFiDrv::pinMode(26, OUTPUT); //lED
+//	WiFiDrv::pinMode(27, OUTPUT); //BLUE
 
 	// <pin initialisations here>
 
 	// LED Pin is D6 - also connected to mains sensor input on prototype board
 	//pinMode(LED_BUILTIN, OUTPUT);
 
-
-
+	reporter.Connect_Wifi();
+	reporter.Init();
+	
 	monitor.Init();
 
 	// initialise timer

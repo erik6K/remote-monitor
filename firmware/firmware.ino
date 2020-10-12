@@ -13,13 +13,14 @@ volatile State g_STATE;
 volatile bool flag_update = 0;
 
 
-
+/* unused function for controlling rgb led */
 void setLEDs(uint8_t led, uint8_t green, uint8_t blue) {
   WiFiDrv::analogWrite(25, green);
   WiFiDrv::analogWrite(26, led);
   WiFiDrv::analogWrite(27, blue);
 }
 
+/* main timer initialisation */
 void Init_Timer() {
 
 	// generic clock (GCLK4) used to clock timers

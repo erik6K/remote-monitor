@@ -12,7 +12,6 @@ def index():
         return render_template('error.html')
     payload = request.json()
     devices = payload['value']
-
     return render_template('index.html', devices=devices)
 
 @app.route('/telemetry/<device_id>')

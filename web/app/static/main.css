@@ -1,4 +1,28 @@
 
+.device {
+    text-align: center;
+    border: 1px;
+    background-color: #31708e;
+    border-radius: 10px;
+    padding: 1em;
+    margin: 1em;
+    color: white;
+}
+
+.telemetry {
+    font-size: x-large;
+    font-weight: bold;
+    background-color: white;
+    padding: 0.5em;
+    margin:0.5em;
+    border-radius: 5px;
+    color: black;
+}
+
+.time {
+    font-weight: bold;
+}
+
 @media only screen and (min-width: 992px){
 body {
     background-color: #F7F9FB !important;

@@ -70,7 +70,7 @@ void setup() {
 
 	reporter.Connect_Wifi();
 	reporter.Init();
-	
+
 	monitor.Init();
 
 	// initialise timer
@@ -102,7 +102,7 @@ void loop() {
 			SerialUSB.println("ADC READINGS");
 
 			monitor.take_mains_samples();
-			while(monitor.adc_busy());
+			while(monitor.adc_busy()); // wait for samples to be taken
 			/*
 			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
@@ -113,7 +113,9 @@ void loop() {
 			monitor.compute_fft();
 
 			//SerialUSB.print("50Hz: ");
-			SerialUSB.println(monitor.verify_50Hz() ? "Yes" : "No");
+			//SerialUSB.println(monitor.verify_50Hz() ? "Yes" : "No");
+
+			reporter.report_data(monitor.verify_50Hz(), monitor.get_battery_volts());
 
 			// re-enable timer
 			g_STATE = PERIODIC;

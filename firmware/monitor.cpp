@@ -240,7 +240,7 @@ float Monitor::get_battery_volts() {
 	result[0] = (float)min / 1240.91;
 	result[1] = (float)avg / 1240.91;
 
-	return result[0];
+	return result[1];
 }
 
 /* ------ADC Interrupt Service Routine------ */

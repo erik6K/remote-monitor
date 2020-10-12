@@ -3,9 +3,9 @@
 //#include <WiFiNINA.h>
 //#include <utility/wifi_drv.h>
 
-#include "monitor.h"
-#include "reporter.h"
 #include "defs.h"
+#include "reporter.h"
+#include "monitor.h"
 
 
 enum State { PERIODIC, ANALYSE, DEBUG };

@@ -5,33 +5,27 @@
 #include <time.h>
 #include <SPI.h>
 
+#include <assert.h>
+
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
 #include <RTCZero.h>
 #include <PubSubClient.h>
 
-/*
-#include "src/WiFiNINA/src/WiFiNINA.h"
-#include "src/WiFiNINA/src/WiFiUdp.h"
-#include "src/RTCZero/src/RTCZero.h"
-#include "src/PubSubClient/src/PubSubClient.h"
-*/
-#include "./configure.h"
+#include "configure.h"
 
 // this is an easy to use NTP Arduino library by Stefan Staub - updates can be found here https://github.com/sstaub/NTP
-#include "./ntp.h"
-#include "./sha256.h"
-#include "./base64.h"
-#include "./utils.h"
+#include "ntp.h"
+#include "sha256.h"
+#include "base64.h"
+#include "utils.h"
 
-// create a WiFi UDP object for NTP to use
-WiFiUDP wifiUdp;
-// create an NTP object
-NTP ntp(wifiUdp);
-// Create an rtc object
-RTCZero rtc;
 
-#include "./iotc_dps.h"
+#define AZURE_IOT_CENTRAL_DPS_ENDPOINT "global.azure-devices-provisioning.net"
+#define TEMP_BUFFER_SIZE 1024
+#define AUTH_BUFFER_SIZE 256
+
+//#include "iotc_dps.h"
 
 // MQTT publish topics
 static const char PROGMEM IOT_EVENT_TOPIC[] = "devices/{device_id}/messages/events/";
@@ -63,6 +57,15 @@ class Reporter {
 
 		time_t this_second = 0;
 		time_t checkTime = 1300000000;
+
+
+		int getDPSAuthString(char* scopeId, char* deviceId, char* key, char *buffer, int bufferSize, size_t &outLength);
+
+		int _getOperationId(char* scopeId, char* deviceId, char* authHeader, char *operationId);
+
+		int _getHostName(char *scopeId, char*deviceId, char *authHeader, char*operationId, char* hostName);
+
+		int getHubHostName(char *scopeId, char* deviceId, char* key, char *hostName);
 
 
 };

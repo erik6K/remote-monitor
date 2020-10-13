@@ -9,5 +9,3 @@ static char PROGMEM wifi_ssid[] = "iPhone";
 static char PROGMEM wifi_password[] = "87654321";
 
 // DEVICE
-#define TELEMETRY_SEND_INTERVAL 30000 // telemetry data sent every 30000ms = 30sec
-#define SENSOR_READ_INTERVAL 1000 //Read every 1000ms = 1 sec

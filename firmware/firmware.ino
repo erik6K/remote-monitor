@@ -67,12 +67,12 @@ void setup() {
 
 	// LED Pin is D6 - also connected to mains sensor input on prototype board
 	//pinMode(LED_BUILTIN, OUTPUT);
-
+ 
 	reporter.Connect_Wifi();
 	reporter.Init();
 
 	monitor.Init();
-
+	SerialUSB.println("MONITOR START");
 	// initialise timer
 	Init_Timer();
 
@@ -82,7 +82,10 @@ void setup() {
 
 void loop() {
   // Keep the MQTT connection alive
-  reporter.mqtt_client->loop(); 
+  //reporter.mqtt_client->loop(); 
+
+	// give the MQTT handler time to do its thing
+	reporter.mqqt_loop();
 
 	switch(g_STATE)
 	{

@@ -1,10 +1,11 @@
 #ifndef REPORTER_H
 #define REPORTER_H
 
-#include <stdarg.h>
-#include <time.h>
+#include <Arduino.h>
 #include <SPI.h>
 
+#include <stdarg.h>
+#include <time.h>
 #include <assert.h>
 
 #include <WiFiNINA.h>
@@ -25,21 +26,18 @@
 #define TEMP_BUFFER_SIZE 1024
 #define AUTH_BUFFER_SIZE 256
 
-//#include "iotc_dps.h"
-
 // MQTT publish topics
 static const char PROGMEM IOT_EVENT_TOPIC[] = "devices/{device_id}/messages/events/";
 
 class Reporter {
 	public:
-		void connectMQTT(String deviceId, String username, String password);
-		String createIotHubSASToken(char *key, String url, long expire);
-
 		Reporter();
+
 		void Connect_Wifi();
 		void Init();
 		void report_data(int mains_status, int battery_voltage);
 
+		void mqqt_loop();
 
 	private:
 		void getTime();
@@ -58,15 +56,13 @@ class Reporter {
 		time_t this_second = 0;
 		time_t checkTime = 1300000000;
 
+		void connectMQTT(String deviceId, String username, String password);
+		String createIotHubSASToken(char *key, String url, long expire);
 
 		int getDPSAuthString(char* scopeId, char* deviceId, char* key, char *buffer, int bufferSize, size_t &outLength);
-
 		int _getOperationId(char* scopeId, char* deviceId, char* authHeader, char *operationId);
-
 		int _getHostName(char *scopeId, char*deviceId, char *authHeader, char*operationId, char* hostName);
-
 		int getHubHostName(char *scopeId, char* deviceId, char* key, char *hostName);
-
 
 };
 extern Reporter reporter;

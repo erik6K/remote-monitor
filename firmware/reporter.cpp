@@ -17,6 +17,8 @@ void Reporter::Connect_Wifi() {
 	int status = WL_IDLE_STATUS;
     while ( status != WL_CONNECTED) {
         //Serial_printf((char*)F("Attempting to connect to Wi-Fi SSID: %s \n"), wifi_ssid);
+        SerialUSB.print("Attempting to connect to Wi-Fi SSID: ");
+        SerialUSB.println(wifi_ssid);
         status = WiFi.begin(wifi_ssid, wifi_password);
         delay(1000);
     }
@@ -45,12 +47,9 @@ void Reporter::Init() {
     wifiClient.connect(iothubHost.c_str(), 8883);
     mqtt_client = new PubSubClient(iothubHost.c_str(), 8883, wifiClient);
     connectMQTT(deviceId, username, sasToken);
-
 }
 
 void Reporter::report_data(int mains_status, int battery_avg) {
-    // give the MQTT handler time to do it's thing
-    mqtt_client->loop(); 
     
     // send telemetry values
     if (mqtt_client->connected()) {
@@ -61,9 +60,13 @@ void Reporter::report_data(int mains_status, int battery_avg) {
         String payload = F("{\"MainsStatus\": \"{mains}\", \"BatteryVoltage\": {battery}}");
         payload.replace(F("{mains}"), mains_status ? "YES" : "NO");//);
         payload.replace(F("{battery}"), String(battery_avg));
-        //Serial_printf("\t%s\n", payload.c_str());
+        SerialUSB.println(payload.c_str());
         mqtt_client->publish(topic.c_str(), payload.c_str());
     }
+}
+
+void Reporter::mqqt_loop() {
+  mqtt_client->loop();
 }
 
 void Reporter::connectMQTT(String deviceId, String username, String password) {

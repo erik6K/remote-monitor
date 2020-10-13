@@ -40,6 +40,8 @@ class Reporter {
 		void Init();
 		void report_data(int mains_status, int battery_voltage);
 
+    PubSubClient *mqtt_client = NULL;
+
 
 	private:
 		void getTime();
@@ -49,7 +51,6 @@ class Reporter {
 		String sharedAccessKey;
 
 		WiFiSSLClient wifiClient;
-		PubSubClient *mqtt_client = NULL;
 
 		bool timeSet = false;
 		bool wifiConnected = false;

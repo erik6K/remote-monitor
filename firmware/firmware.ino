@@ -81,6 +81,8 @@ void setup() {
 }
 
 void loop() {
+  // Keep the MQTT connection alive
+  reporter.mqtt_client->loop(); 
 
 	switch(g_STATE)
 	{

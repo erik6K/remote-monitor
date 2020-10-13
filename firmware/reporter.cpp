@@ -14,6 +14,7 @@ Reporter::Reporter() {
 }
 
 void Reporter::Connect_Wifi() {
+  Serial.print("Connecting to WiFi...");
 	int status = WL_IDLE_STATUS;
     while ( status != WL_CONNECTED) {
         //Serial_printf((char*)F("Attempting to connect to Wi-Fi SSID: %s \n"), wifi_ssid);
@@ -49,9 +50,7 @@ void Reporter::Init() {
 }
 
 void Reporter::report_data(int mains_status, int battery_avg) {
-    // give the MQTT handler time to do it's thing
-    mqtt_client->loop(); 
-    
+   
     // send telemetry values
     if (mqtt_client->connected()) {
         SerialUSB.println(F("Sending telemetry ..."));
@@ -61,8 +60,9 @@ void Reporter::report_data(int mains_status, int battery_avg) {
         String payload = F("{\"MainsStatus\": \"{mains}\", \"BatteryVoltage\": {battery}}");
         payload.replace(F("{mains}"), mains_status ? "YES" : "NO");//);
         payload.replace(F("{battery}"), String(battery_avg));
-        //Serial_printf("\t%s\n", payload.c_str());
         mqtt_client->publish(topic.c_str(), payload.c_str());
+    } else { //MQTT Client has disconnected. Initiate reconnect.
+      Connect_Wifi(); 
     }
 }
 

@@ -12,8 +12,15 @@ void Monitor::Init() {
 	pinMode(6, INPUT);
 	pinMode(7, INPUT);
 
+	// RGB LED Pin Init
+	WiFiDrv::pinMode(25, OUTPUT); //GREEN
+	WiFiDrv::pinMode(26, OUTPUT); //RED
+	WiFiDrv::pinMode(27, OUTPUT); //BLUE
+
 	init_ADC_Pins();
 	init_ADC_Clock();
+
+	mains_status = 0;
 }
 
 void Monitor::init_ADC_Pins() {
@@ -88,7 +95,7 @@ void Monitor::init_ADC_Single() {
 	REG_ADC_CTRLA |= ADC_CTRLA_SWRST; // reset adc
 	while (ADC->STATUS.bit.SYNCBUSY);
 
-	REG_ADC_REFCTRL = ADC_REFCTRL_REFSEL_INTVCC1;
+	REG_ADC_REFCTRL = ADC_REFCTRL_REFSEL_AREFA;
 
 	REG_ADC_AVGCTRL |= ADC_AVGCTRL_SAMPLENUM_1;
 
@@ -131,6 +138,10 @@ void Monitor::remove_DC() {
 	
 	SerialUSB.print("Min: "); SerialUSB.println(min);
 	SerialUSB.print("Max: "); SerialUSB.println(max);
+
+	led.r = 0; led.g = 0; led.b = 0;
+	if (max - min < 1000) led.r = 80;
+	else if (max - min > 4090) led.b = 80;
 	
 	int offset = ((max - min) / 2) + min;
 
@@ -143,15 +154,15 @@ void Monitor::compute_fft() {
 	ZeroFFT(mains_samples, SAMPLES);
 }
 
-int Monitor::verify_50Hz() {
+void Monitor::verify_50Hz() {
 
-	uint8_t histogram[256] = {0};
+	uint8_t histogram[256] = {0}; // histogram for noise floor detection
 
+	// bins 3 and 4 correspond to ~35 and ~51 Hz respectively
 	int mag_50Hz = (mains_samples[3] + mains_samples[4]) / 2;
 
-
+	// 
 	for (int i = 0; i < (SAMPLES >> 1); i++) {
-
 		int mag = min(mains_samples[i], 255);
 		histogram[mag] += 1;
 	}
@@ -160,20 +171,21 @@ int Monitor::verify_50Hz() {
 	int maxh = 0;
 	int noise_floor = 0;
 
+	// element that contains max value in histogram is the noise floor
 	for (int i = 0; i < 256; i++) {
 		if (maxh < histogram[i]) {
-			/*
-			SerialUSB.print("prev: "); SerialUSB.println(maxh);
-			SerialUSB.print("new: "); SerialUSB.println(histogram[i]);
-			SerialUSB.print("i: "); SerialUSB.println(i);
-			*/
 			maxh = histogram[i];
-			noise_floor = i + 1;
+			noise_floor = i + 1; // +1 to prevent noise floor of 0
 		}
 	}
 //	SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
 //	SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
-	return (mag_50Hz > noise_floor*5 ? 1 : 0);
+
+	// check if 50Hz magnitude is at least 5 times larger than noise floor
+	mains_status = (mag_50Hz > noise_floor*5 ? 1 : 0);
+
+	if (mains_status) led.g = 80;
+	setLEDs();
 }
 
 bool Monitor::add_mains_sample(int smpl) {
@@ -237,10 +249,20 @@ float Monitor::get_battery_volts() {
 	}
 	avg = avg / NUM_BATT_SAMPLES;
 
-	result[0] = (float)min / 1240.91;
-	result[1] = (float)avg / 1240.91;
+	result[0] = (float)min / 1240.91 * 6.4;
+	result[1] = (float)avg / 1240.91 * 6.4;
 
 	return result[1];
+}
+
+int Monitor::get_mains_status() {
+	return mains_status;
+}
+
+void Monitor::setLEDs() {
+	WiFiDrv::analogWrite(25, led.g);
+	WiFiDrv::analogWrite(26, led.r);
+	WiFiDrv::analogWrite(27, led.b);
 }
 
 /* ------ADC Interrupt Service Routine------ */

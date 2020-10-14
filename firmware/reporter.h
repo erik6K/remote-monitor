@@ -37,8 +37,6 @@ class Reporter {
 		void Init();
 		void report_data(int mains_status, int battery_voltage);
 
-    
-
 		void mqqt_loop();
 
 	private:

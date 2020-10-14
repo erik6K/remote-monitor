@@ -2,6 +2,8 @@
 #define MONITOR_H
 
 #include <Arduino.h>
+#include <WiFiNINA.h>
+#include <utility/wifi_drv.h>
 #include "src/Adafruit_Zero_FFT_Library/Adafruit_ZeroFFT.h"
 #include "defs.h"
 
@@ -30,7 +32,8 @@ class Monitor {
 
 		void remove_DC();
 		void compute_fft();
-		int verify_50Hz();
+		void verify_50Hz();
+		int get_mains_status();
 
 		ADC_State adc_state;
 
@@ -41,14 +44,22 @@ class Monitor {
 		void init_ADC_Freerun();
 		void init_ADC_Single();
 
+		void setLEDs();
+
 
 		int16_t mains_samples[SAMPLES];
+		int mains_status;
 
 		int battery_samples[NUM_BATT_SAMPLES];
 
 		int mains_index;
 		int battery_index;
 		bool adc_BUSY;
+
+		struct LED {
+			uint8_t r = 0, g = 0, b = 0;
+		};
+		LED led;
 
 };
 extern Monitor monitor;

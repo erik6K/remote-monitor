@@ -54,8 +54,8 @@ void setup() {
 	// LED Pin is D6 - also connected to mains sensor input on prototype board
 	//pinMode(LED_BUILTIN, OUTPUT);
  
-//	reporter.Connect_Wifi();
-//	reporter.Init();
+	reporter.Connect_Wifi();
+	reporter.Init();
 
 	monitor.Init();
 
@@ -70,7 +70,7 @@ void loop() {
 	static int REPORT_counter = 0;
 
 	// give the MQTT handler time to do its thing
-//	reporter.mqqt_loop();
+	reporter.mqqt_loop();
 
 	switch(g_STATE)
 	{
@@ -111,7 +111,7 @@ void loop() {
 			REPORT_counter++;
 			if (REPORT_counter >= 10) {
 				REPORT_counter = 0;
-				reporter.report_data(monitor.get_mains_status() ? "ON" : "OFF", monitor.get_battery_volts());
+				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
 			// else just re-enter periodic state
 			g_STATE = PERIODIC;

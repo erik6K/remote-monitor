@@ -5,7 +5,7 @@ static char PROGMEM iotc_deviceKey[] = "TsmHvdqbDapfYWqB6hKl1L09CifUi4TN2TY1uFg6
 static long timetolive = 864000; //Seconds before access key expires. Will reset when device restarts. 864000 = 10 days.
 
 // WI-FI
-static char PROGMEM wifi_ssid[] = "<SECRET>";
-static char PROGMEM wifi_password[] = "<SECRET>";
+static char PROGMEM wifi_ssid[] = "GalaxyS20310e";
+static char PROGMEM wifi_password[] = "Jenmei98";
 
 // DEVICE

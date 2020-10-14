@@ -37,7 +37,10 @@ class Reporter {
 		void Init();
 		void report_data(int mains_status, int battery_voltage);
 
-		void mqqt_loop();
+		void mqtt_loop();
+
+		void mqtt_disconnect();
+		void mqtt_reconnect();
 
 	private:
 		void getTime();

@@ -50,8 +50,6 @@ void Reporter::Init() {
 }
 
 void Reporter::report_data(int mains_status, int battery_avg) {
-	 
-		
 		// send telemetry values
 		if (mqtt_client->connected()) {
 				SerialUSB.println(F("Sending telemetry ..."));
@@ -63,13 +61,19 @@ void Reporter::report_data(int mains_status, int battery_avg) {
 				payload.replace(F("{battery}"), String(battery_avg));
 				SerialUSB.println(payload.c_str());
 				mqtt_client->publish(topic.c_str(), payload.c_str());
-		} else { //MQTT Client has disconnected. Initiate reconnect.
-			Connect_Wifi(); 
 		}
 }
 
-void Reporter::mqqt_loop() {
+void Reporter::mqtt_loop() {
 	mqtt_client->loop();
+}
+
+void Reporter::mqtt_disconnect() {
+	mqtt_client->disconnect();
+}
+
+void Reporter::mqtt_reconnect() {
+	
 }
 
 void Reporter::connectMQTT(String deviceId, String username, String password) {

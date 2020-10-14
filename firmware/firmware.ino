@@ -1,7 +1,5 @@
 
 #include <SPI.h>
-//#include <WiFiNINA.h>
-//#include <utility/wifi_drv.h>
 
 #include "defs.h"
 #include "reporter.h"
@@ -14,13 +12,6 @@ volatile State g_STATE;
 volatile bool flag_update = 0;
 
 
-/* unused function for controlling rgb led 
-void setLEDs(uint8_t led, uint8_t green, uint8_t blue) {
-  WiFiDrv::analogWrite(25, green);
-  WiFiDrv::analogWrite(26, led);
-  WiFiDrv::analogWrite(27, blue);
-}
-*/
 /* main timer initialisation */
 void Init_Timer() {
 
@@ -58,21 +49,16 @@ void setup() {
 	// wait for serial port to connect
 	}
 
-	// RGB LED Pin Init
-//	WiFiDrv::pinMode(25, OUTPUT); //GREEN
-//	WiFiDrv::pinMode(26, OUTPUT); //lED
-//	WiFiDrv::pinMode(27, OUTPUT); //BLUE
-
 	// <pin initialisations here>
 
 	// LED Pin is D6 - also connected to mains sensor input on prototype board
 	//pinMode(LED_BUILTIN, OUTPUT);
  
-	reporter.Connect_Wifi();
-	reporter.Init();
+//	reporter.Connect_Wifi();
+//	reporter.Init();
 
 	monitor.Init();
-	SerialUSB.println("MONITOR START");
+
 	// initialise timer
 	Init_Timer();
 
@@ -81,11 +67,10 @@ void setup() {
 }
 
 void loop() {
-  // Keep the MQTT connection alive
-  //reporter.mqtt_client->loop(); 
+	static int REPORT_counter = 0;
 
 	// give the MQTT handler time to do its thing
-	reporter.mqqt_loop();
+//	reporter.mqqt_loop();
 
 	switch(g_STATE)
 	{
@@ -96,8 +81,8 @@ void loop() {
 
 				monitor.take_battery_sample();
 
-			//	SerialUSB.print("Vb: ");
-			//	SerialUSB.println(monitor.get_battery_volts());
+				SerialUSB.print("Vb: ");
+				SerialUSB.println(monitor.get_battery_volts());
 			}
 
 			break;
@@ -117,12 +102,18 @@ void loop() {
 			monitor.remove_DC();
 			monitor.compute_fft();
 
-			//SerialUSB.print("50Hz: ");
-			//SerialUSB.println(monitor.verify_50Hz() ? "Yes" : "No");
+			monitor.verify_50Hz();
 
-			reporter.report_data(monitor.verify_50Hz(), monitor.get_battery_volts());
+			SerialUSB.print("50Hz: ");
+			SerialUSB.println(monitor.get_mains_status() ? "Yes" : "No");
 
-			// re-enable timer
+			// after 10 mains checks we report data to web
+			REPORT_counter++;
+			if (REPORT_counter >= 10) {
+				REPORT_counter = 0;
+				reporter.report_data(monitor.get_mains_status() ? "ON" : "OFF", monitor.get_battery_volts());
+			}
+			// else just re-enter periodic state
 			g_STATE = PERIODIC;
 			ENABLE_TIMER()
 

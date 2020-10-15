@@ -70,7 +70,7 @@ void loop() {
 	static int REPORT_counter = 0;
 
 	// give the MQTT handler time to do its thing
-	reporter.mqqt_loop();
+	 reporter.mqqt_loop();
 
 	switch(g_STATE)
 	{

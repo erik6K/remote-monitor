@@ -1,3 +1,10 @@
+/*
+
+
+
+
+*/
+
 #include "reporter.h"
 
 Reporter reporter;
@@ -7,103 +14,150 @@ WiFiUDP wifiUdp;
 // create an NTP object
 NTP ntp(wifiUdp);
 // Create an rtc object
-RTCZero rtc;
+//RTCZero rtc;
 
 Reporter::Reporter() {
 
 }
 
-void Reporter::Connect_Wifi() {
-	
-	int status = WL_IDLE_STATUS;
-		while ( status != WL_CONNECTED) {
-				SerialUSB.print("Attempting to connect to Wi-Fi SSID: ");
-				SerialUSB.println(wifi_ssid);
-				status = WiFi.begin(wifi_ssid, wifi_password);
-				delay(1000);
+void Reporter::Init() {
+
+		if (!Connect_Wifi()) {
+			reporter_state = RADIO_ONLY;
+		}
+		else {
+			// get current UTC time
+			getTime();
+
+			SerialUSB.println("Getting IoT Hub host from Azure IoT DPS");
+
+			iotc.deviceId = IOTC_DEVICEID;
+		//	sharedAccessKey = IOTC_DEVICEKEY;
+			char hostName[64] = {0};
+			getHubHostName(IOTC_SCOPEID, IOTC_DEVICEID, IOTC_DEVICEKEY, hostName);
+			iotc.iothubHost = hostName;
+
+			// create SAS token and user name for connecting to MQTT broker
+			String url = iotc.iothubHost + urlEncode(String((char*)F("/devices/") + iotc.deviceId).c_str());
+			//char *devKey = IOTC_DEVICEKEY;
+
+			long expire = ntp.epoch() + TIMETOLIVE;
+			iotc.sasToken = createIotHubSASToken(IOTC_DEVICEKEY, url, expire);
+
+			iotc.username = iotc.iothubHost + "/" + iotc.deviceId + (char*)F("/api-version=2016-11-14");
+
+			// connect to the IoT Hub MQTT broker
+			wifiClient.connect(iotc.iothubHost.c_str(), 8883);
+			mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
+			if(!connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken)) {
+				wifiClient.stop();
+				delete(mqtt_client);
+				reporter_state = RADIO_ONLY;
+			}
+			else {
+				reporter_state = MQTT;
+			}
 		}
 }
 
-void Reporter::Init() {
+bool Reporter::Connect_Wifi() {
 
-		// get current UTC time
-		getTime();
+	int status = WL_IDLE_STATUS;
+	int retry = 0;
+		while (status != WL_CONNECTED && retry < 5) {
 
-		SerialUSB.println("Getting IoT Hub host from Azure IoT DPS");
-//		deviceId = iotc_deviceId;
-//		sharedAccessKey = iotc_deviceKey;
-//		char hostName[64] = {0};
-//		getHubHostName((char*)iotc_scopeId, (char*)iotc_deviceId, (char*)iotc_deviceKey, hostName);
-//		iothubHost = hostName;
+				SerialUSB.print("Attempting to connect to Wi-Fi SSID: ");
+				SerialUSB.println(WIFI_SSID);
 
-		// create SAS token and user name for connecting to MQTT broker
-//		String url = iothubHost + urlEncode(String((char*)F("/devices/") + deviceId).c_str());
-//		char *devKey = (char *)sharedAccessKey.c_str();
-//		long expire = rtc.getEpoch() + timetolive;
-//		String sasToken = createIotHubSASToken(devKey, url, expire);
-//		String username = iothubHost + "/" + deviceId + (char*)F("/api-version=2016-11-14");
-
-		// connect to the IoT Hub MQTT broker
-		//wifiClient.connect(iothubHost.c_str(), 8883);
-		//mqtt_client = new PubSubClient(iothubHost.c_str(), 8883, wifiClient);
-		//connectMQTT(deviceId, username, sasToken);
-
+				status = WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+				delay(1000);
+				if (status == WL_CONNECTED) return true;
+				retry++;
+		}
+		return false;
 }
 
-void Reporter::report_data(int mains_status, int battery_avg) {
+bool Reporter::report_data(int mains_status, int battery_avg) {
+
+	// INTERNET
+	if (reporter_state == MQTT) {
+
 		// send telemetry values
 		if (mqtt_client->connected()) {
 				SerialUSB.println(F("Sending telemetry ..."));
+
 				String topic = (String)IOT_EVENT_TOPIC;
-				topic.replace(F("{device_id}"), deviceId);
+				topic.replace(F("{device_id}"), iotc.deviceId);
+
 				char buff[10];
 				String payload = F("{\"MainsStatus\": \"{mains}\", \"BatteryVoltage\": {battery}}");
+
 				payload.replace(F("{mains}"), mains_status ? "YES" : "NO");//);
 				payload.replace(F("{battery}"), String(battery_avg));
+
 				SerialUSB.println(payload.c_str());
 				mqtt_client->publish(topic.c_str(), payload.c_str());
+				return true;
 		}
+		else {
+			// radio if levels low
+
+			if (WiFi.status() == WL_CONNECTED) {
+				// try to reconnect mqtt
+			}
+			else {
+				// lost wifi, try to reconnect to wifi
+			}
+		}
+
+	}
+	// RADIO
+	else {
+		// radio if levels low
+
+		if (reporter_state == MQTT_LOST) {
+			// try to regain connection
+		}
+		return true;
+	}
 }
 
 void Reporter::mqtt_loop() {
 	mqtt_client->loop();
 }
 
-void Reporter::mqtt_disconnect() {
-	mqtt_client->disconnect();
-}
 
-void Reporter::mqtt_reconnect() {
-	
-}
-
-void Reporter::connectMQTT(String deviceId, String username, String password) {
+bool Reporter::connectMQTT(String deviceId, String username, String password) {
 		mqtt_client->disconnect();
 
 		SerialUSB.println(F("Starting IoT Hub connection"));
 		int retry = 0;
-		while(retry < 1 && !mqtt_client->connected()) {     
+
+		while(retry < 10 && !mqtt_client->connected() && WiFi.status() == WL_CONNECTED) {
+
 				if (mqtt_client->connect(deviceId.c_str(), username.c_str(), password.c_str())) {
-								SerialUSB.println(F("===> mqtt connected"));
-								mqttConnected = true;
-				} else {
-						SerialUSB.print(F("---> mqtt failed, rc="));
-						SerialUSB.println(mqtt_client->state());
-						delay(2000);
-						retry++;
+					SerialUSB.println(F("===> mqtt connected"));
+					return true;
+				}
+				else {
+					SerialUSB.print(F("---> mqtt failed, rc="));
+					SerialUSB.println(mqtt_client->state());
+					delay(1000);
+					retry++;
 				}
 		}
+		return false;
 }
 
-String Reporter::createIotHubSASToken(char *key, String url, long expire) {
+String Reporter::createIotHubSASToken(const char *key, String url, long expire) {
 		url.toLowerCase();
 		String stringToSign = url + "\n" + String(expire);
 		int keyLength = strlen(key);
 
-		int decodedKeyLength = base64_dec_len(key, keyLength);
+		int decodedKeyLength = base64_dec_len((char*)key, keyLength);
 		char decodedKey[decodedKeyLength];
 
-		base64_decode(decodedKey, key, keyLength);
+		base64_decode(decodedKey, (char*)key, keyLength);
 
 		Sha256 *sha256 = new Sha256();
 		sha256->initHmac((const uint8_t*)decodedKey, (size_t)decodedKeyLength);
@@ -127,17 +181,17 @@ void Reporter::getTime() {
 		SerialUSB.print(ntp.formattedTime("%d. %B %Y - "));
 		SerialUSB.println(ntp.formattedTime("%A %T"));
 
-		rtc.begin();
-		//rtc.setEpoch(ntp.epoch());
-		//timeSet = true;
+	//	rtc.begin();
+	//	rtc.setEpoch(WiFi.getTime());
 }
 
 
 //-----------------------------------
 
 
-int Reporter::getDPSAuthString(char* scopeId, char* deviceId, char* key, char *buffer, int bufferSize, size_t &outLength) {
-	unsigned long expiresSecond = rtc.getEpoch() + 7200;
+int Reporter::getDPSAuthString(const char* scopeId, const char* deviceId, const char* key, char *buffer, int bufferSize, size_t &outLength) {
+	ntp.update();
+	unsigned long expiresSecond = ntp.epoch() + 7200;
 	assert(expiresSecond > 7200);
 
 	String deviceIdEncoded = urlEncode(deviceId);
@@ -150,7 +204,7 @@ int Reporter::getDPSAuthString(char* scopeId, char* deviceId, char* key, char *b
 	assert(dataBufferLength < AUTH_BUFFER_SIZE); dataBuffer[dataBufferLength] = 0;
 
 	char keyDecoded[AUTH_BUFFER_SIZE] = {0};
-	size = base64_decode(keyDecoded, key, strlen(key));
+	size = base64_decode(keyDecoded, (char*)key, strlen(key));
 	assert(size < AUTH_BUFFER_SIZE && keyDecoded[size] == 0);
 	const size_t keyDecodedLength = size;
 
@@ -170,7 +224,7 @@ int Reporter::getDPSAuthString(char* scopeId, char* deviceId, char* key, char *b
 	return 0;
 }
 
-int Reporter::_getOperationId(char* scopeId, char* deviceId, char* authHeader, char *operationId) {
+int Reporter::_getOperationId(const char* scopeId, const char* deviceId, char* authHeader, char *operationId) {
 	WiFiSSLClient client;
 	if (client.connect(AZURE_IOT_CENTRAL_DPS_ENDPOINT, 443)) {
 		char tmpBuffer[TEMP_BUFFER_SIZE] = {0};
@@ -229,7 +283,7 @@ error_exit:
 	return 0;
 }
 
-int Reporter::_getHostName(char *scopeId, char*deviceId, char *authHeader, char*operationId, char* hostName) {
+int Reporter::_getHostName(const char *scopeId, const char*deviceId, char *authHeader, char*operationId, char* hostName) {
 	WiFiSSLClient client;
 	if (!client.connect(AZURE_IOT_CENTRAL_DPS_ENDPOINT, 443)) {
 		Serial.println("ERROR: DPS endpoint GET call has failed.");
@@ -270,19 +324,19 @@ int Reporter::_getHostName(char *scopeId, char*deviceId, char *authHeader, char*
 	return 0;
 }
 
-int Reporter::getHubHostName(char *scopeId, char* deviceId, char* key, char *hostName) {
+int Reporter::getHubHostName(const char *scopeId, const char* deviceId, const char* key, char *hostName) {
 	char authHeader[AUTH_BUFFER_SIZE] = {0};
 	size_t size = 0;
-	//Serial.println("- iotc.dps : getting auth...");
+	Serial.println("- iotc.dps : getting auth...");
 	if (getDPSAuthString(scopeId, deviceId, key, (char*)authHeader, AUTH_BUFFER_SIZE, size)) {
 		Serial.println("ERROR: getDPSAuthString has failed");
 		return 1;
 	}
-	//Serial.println("- iotc.dps : getting operation id...");
+	Serial.println("- iotc.dps : getting operation id...");
 	char operationId[AUTH_BUFFER_SIZE] = {0};
 	if (_getOperationId(scopeId, deviceId, authHeader, operationId) == 0) {
 		delay(4000);
-		//Serial.println("- iotc.dps : getting host name...");
+		Serial.println("- iotc.dps : getting host name...");
 		while( _getHostName(scopeId, deviceId, authHeader, operationId, hostName) == 2) delay(5000);
 		return 0;
 	}

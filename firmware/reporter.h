@@ -33,40 +33,41 @@ class Reporter {
 	public:
 		Reporter();
 
-		void Connect_Wifi();
 		void Init();
-		void report_data(int mains_status, int battery_voltage);
+		bool report_data(int mains_status, int battery_voltage);
 
 		void mqtt_loop();
 
-		void mqtt_disconnect();
-		void mqtt_reconnect();
-
 	private:
+		bool Connect_Wifi();
 		void getTime();
 
+		/*
 		String iothubHost;
 		String deviceId;
 		String sharedAccessKey;
+		*/
+
+		struct IoTDetails {
+			String deviceId;
+			String iothubHost;
+			String sasToken;
+			String username;
+		} iotc;
 
 		WiFiSSLClient wifiClient;
 		PubSubClient *mqtt_client = NULL;
 
+		enum Reporter_STATE { MQTT, MQTT_LOST, RADIO_ONLY } reporter_state;
 
-		bool timeSet = false;
-		bool wifiConnected = false;
-		bool mqttConnected = false;
 
-		time_t this_second = 0;
-		time_t checkTime = 1300000000;
+		bool connectMQTT(String deviceId, String username, String password);
+		String createIotHubSASToken(const char *key, String url, long expire);
 
-		void connectMQTT(String deviceId, String username, String password);
-		String createIotHubSASToken(char *key, String url, long expire);
-
-		int getDPSAuthString(char* scopeId, char* deviceId, char* key, char *buffer, int bufferSize, size_t &outLength);
-		int _getOperationId(char* scopeId, char* deviceId, char* authHeader, char *operationId);
-		int _getHostName(char *scopeId, char*deviceId, char *authHeader, char*operationId, char* hostName);
-		int getHubHostName(char *scopeId, char* deviceId, char* key, char *hostName);
+		int getDPSAuthString(const char* scopeId, const char* deviceId, const char* key, char *buffer, int bufferSize, size_t &outLength);
+		int _getOperationId(const char* scopeId, const char* deviceId, char* authHeader, char *operationId);
+		int _getHostName(const char *scopeId, const char*deviceId, char *authHeader, char*operationId, char* hostName);
+		int getHubHostName(const char *scopeId, const char* deviceId, const char* key, char *hostName);
 
 };
 extern Reporter reporter;

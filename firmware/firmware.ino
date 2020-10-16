@@ -56,7 +56,19 @@ void setup() {
  
 	reporter.Connect_Wifi();
 	reporter.Init();
+  
+  RTC->MODE2.CTRL.reg |= RTC_MODE2_CTRL_SWRST;
+  while(RTC->MODE2.STATUS.bit.SYNCBUSY);
+  
+  GCLK->GENCTRL.bit.GENEN = 0;
+  while(GCLK->STATUS.bit.SYNCBUSY);
+  
+  //GCLK->GENDIV.reg = GCLK_GENDIV_ID(2)|GCLK_GENDIV_DIV(1);
+  //while(GCLK->STATUS.bit.SYNCBUSY);
 
+  
+  
+  
 	monitor.Init();
 
 	// initialise timer
@@ -70,7 +82,7 @@ void loop() {
 	static int REPORT_counter = 0;
 
 	// give the MQTT handler time to do its thing
-	//reporter.mqqt_loop();
+	//reporter.mqtt_loop();
 
 	switch(g_STATE)
 	{
@@ -90,30 +102,44 @@ void loop() {
 		case ANALYSE:
 
 			SerialUSB.println("ADC READINGS");
-
+/*
 			// disable all interrupt except adc
 			NVIC_DisableIRQ(RTC_IRQn);
-			NVIC_DisableIRQ(TCC0_IRQn);
-			NVIC_DisableIRQ(TCC1_IRQn);
-			NVIC_DisableIRQ(TCC2_IRQn);
+			NVIC_DisableIRQ(EIC_IRQn);
+			NVIC_DisableIRQ(DMAC_IRQn);
+			NVIC_DisableIRQ(EVSYS_IRQn);
 			NVIC_DisableIRQ(TC3_IRQn);
 			NVIC_DisableIRQ(TC4_IRQn);
 			NVIC_DisableIRQ(TC5_IRQn);
+      NVIC_DisableIRQ(SERCOM0_IRQn);
+      NVIC_DisableIRQ(SERCOM1_IRQn);
+      NVIC_DisableIRQ(SERCOM2_IRQn);
+      NVIC_DisableIRQ(SERCOM3_IRQn);
+      NVIC_DisableIRQ(SERCOM4_IRQn);
+      NVIC_DisableIRQ(SERCOM5_IRQn);
 			__DSB();
 			__ISB();
+*/
+      //reporter.mqtt_disconnect();
 
 			monitor.take_mains_samples();
 			while(monitor.adc_busy()); // wait for samples to be taken
-
+/*
 			// re-enable interrupts
 			NVIC_EnableIRQ(RTC_IRQn);
-			NVIC_EnableIRQ(TCC0_IRQn);
-			NVIC_EnableIRQ(TCC1_IRQn);
-			NVIC_EnableIRQ(TCC2_IRQn);
+			NVIC_EnableIRQ(EIC_IRQn);
+			NVIC_EnableIRQ(DMAC_IRQn);
+			NVIC_EnableIRQ(EVSYS_IRQn);
 			NVIC_EnableIRQ(TC3_IRQn);
 			NVIC_EnableIRQ(TC4_IRQn);
 			NVIC_EnableIRQ(TC5_IRQn);
-
+      NVIC_EnableIRQ(SERCOM0_IRQn);
+      NVIC_EnableIRQ(SERCOM1_IRQn);
+      NVIC_EnableIRQ(SERCOM2_IRQn);
+      NVIC_EnableIRQ(SERCOM3_IRQn);
+      NVIC_EnableIRQ(SERCOM4_IRQn);
+      NVIC_EnableIRQ(SERCOM5_IRQn);
+*/
 			/*
 			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
@@ -132,7 +158,7 @@ void loop() {
 			REPORT_counter++;
 			if (REPORT_counter >= 10) {
 				REPORT_counter = 0;
-				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
+				//reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
 			
 			g_STATE = PERIODIC;

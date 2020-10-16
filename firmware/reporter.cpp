@@ -14,7 +14,7 @@ Reporter::Reporter() {
 }
 
 void Reporter::Connect_Wifi() {
-	Serial.print("Connecting to WiFi...");
+	
 	int status = WL_IDLE_STATUS;
 		while ( status != WL_CONNECTED) {
 				SerialUSB.print("Attempting to connect to Wi-Fi SSID: ");
@@ -30,23 +30,24 @@ void Reporter::Init() {
 		getTime();
 
 		SerialUSB.println("Getting IoT Hub host from Azure IoT DPS");
-		deviceId = iotc_deviceId;
-		sharedAccessKey = iotc_deviceKey;
-		char hostName[64] = {0};
-		getHubHostName((char*)iotc_scopeId, (char*)iotc_deviceId, (char*)iotc_deviceKey, hostName);
-		iothubHost = hostName;
+//		deviceId = iotc_deviceId;
+//		sharedAccessKey = iotc_deviceKey;
+//		char hostName[64] = {0};
+//		getHubHostName((char*)iotc_scopeId, (char*)iotc_deviceId, (char*)iotc_deviceKey, hostName);
+//		iothubHost = hostName;
 
 		// create SAS token and user name for connecting to MQTT broker
-		String url = iothubHost + urlEncode(String((char*)F("/devices/") + deviceId).c_str());
-		char *devKey = (char *)sharedAccessKey.c_str();
-		long expire = rtc.getEpoch() + timetolive;
-		String sasToken = createIotHubSASToken(devKey, url, expire);
-		String username = iothubHost + "/" + deviceId + (char*)F("/api-version=2016-11-14");
+//		String url = iothubHost + urlEncode(String((char*)F("/devices/") + deviceId).c_str());
+//		char *devKey = (char *)sharedAccessKey.c_str();
+//		long expire = rtc.getEpoch() + timetolive;
+//		String sasToken = createIotHubSASToken(devKey, url, expire);
+//		String username = iothubHost + "/" + deviceId + (char*)F("/api-version=2016-11-14");
 
 		// connect to the IoT Hub MQTT broker
-		wifiClient.connect(iothubHost.c_str(), 8883);
-		mqtt_client = new PubSubClient(iothubHost.c_str(), 8883, wifiClient);
-		connectMQTT(deviceId, username, sasToken);
+		//wifiClient.connect(iothubHost.c_str(), 8883);
+		//mqtt_client = new PubSubClient(iothubHost.c_str(), 8883, wifiClient);
+		//connectMQTT(deviceId, username, sasToken);
+
 }
 
 void Reporter::report_data(int mains_status, int battery_avg) {
@@ -81,7 +82,7 @@ void Reporter::connectMQTT(String deviceId, String username, String password) {
 
 		SerialUSB.println(F("Starting IoT Hub connection"));
 		int retry = 0;
-		while(retry < 10 && !mqtt_client->connected()) {     
+		while(retry < 1 && !mqtt_client->connected()) {     
 				if (mqtt_client->connect(deviceId.c_str(), username.c_str(), password.c_str())) {
 								SerialUSB.println(F("===> mqtt connected"));
 								mqttConnected = true;
@@ -127,8 +128,8 @@ void Reporter::getTime() {
 		SerialUSB.println(ntp.formattedTime("%A %T"));
 
 		rtc.begin();
-		rtc.setEpoch(ntp.epoch());
-		timeSet = true;
+		//rtc.setEpoch(ntp.epoch());
+		//timeSet = true;
 }
 
 

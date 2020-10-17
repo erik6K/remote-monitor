@@ -96,7 +96,7 @@ void Reporter::report_data(int mains_status, int battery_avg) {
 				char buff[10];
 				String payload = F("{\"MainsStatus\": \"{mains}\", \"BatteryVoltage\": {battery}}");
 
-				payload.replace(F("{mains}"), mains_status ? "YES" : "NO");//);
+				payload.replace(F("{mains}"), mains_status ? "ON" : "OFF");//);
 				payload.replace(F("{battery}"), String(battery_avg));
 
 				SerialUSB.println(payload.c_str());

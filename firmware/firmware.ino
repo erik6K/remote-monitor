@@ -55,7 +55,7 @@ void setup() {
 	//pinMode(LED_BUILTIN, OUTPUT);
  
 	reporter.Init();
-  
+
 	// init object for monitoring battery and mains
 	monitor.Init();
 
@@ -69,7 +69,7 @@ void setup() {
 void loop() {
 	static int REPORT_counter = 0;
 
-	// give the MQTT handler time to do its thing
+	// give the MQTT handler time to do its thing - does nothing if RADIO_ONLY
 	reporter.mqtt_loop();
 
 	switch(g_STATE)
@@ -113,6 +113,7 @@ void loop() {
 			if (REPORT_counter >= 10) {
 				REPORT_counter = 0;
 				SerialUSB.println("Trying to Report Data...");
+
 				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
 			
@@ -156,7 +157,7 @@ void TC4_Handler() {	// ISR for timer TC4
 	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
 
 		// sample battery voltage 10 times before state change
-		if (counter < NUM_BATT_SAMPLES) {
+		if (counter < NUM_CYCLES_B4_REPORT) {
 			//led = ~led;
 	   		//digitalWrite(LED_BUILTIN, led);
 

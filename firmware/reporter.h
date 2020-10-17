@@ -10,7 +10,6 @@
 
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
-#include <RTCZero.h>
 #include <PubSubClient.h>
 
 #include "configure.h"
@@ -42,12 +41,6 @@ class Reporter {
 		bool Connect_Wifi();
 		void try_reconnect();
 		void getTime();
-
-		/*
-		String iothubHost;
-		String deviceId;
-		String sharedAccessKey;
-		*/
 
 		struct IoTDetails {
 			String deviceId;

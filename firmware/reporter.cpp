@@ -23,6 +23,7 @@ Reporter::Reporter() {
 void Reporter::Init() {
 
 		if (!Connect_Wifi()) {
+			// no wifi, assume radio only state
 			reporter_state = RADIO_ONLY;
 		}
 		else {
@@ -49,12 +50,15 @@ void Reporter::Init() {
 			// connect to the IoT Hub MQTT broker
 			wifiClient.connect(iotc.iothubHost.c_str(), 8883);
 			mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
+
 			if(!connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken)) {
+				// if we cant connect initially, assume radio only state and notify operator
 				wifiClient.stop();
 				delete(mqtt_client);
 				reporter_state = RADIO_ONLY;
 			}
 			else {
+				// successfully connected
 				reporter_state = MQTT;
 			}
 		}
@@ -77,7 +81,7 @@ bool Reporter::Connect_Wifi() {
 		return false;
 }
 
-bool Reporter::report_data(int mains_status, int battery_avg) {
+void Reporter::report_data(int mains_status, int battery_avg) {
 
 	// INTERNET
 	if (reporter_state == MQTT) {
@@ -97,17 +101,11 @@ bool Reporter::report_data(int mains_status, int battery_avg) {
 
 				SerialUSB.println(payload.c_str());
 				mqtt_client->publish(topic.c_str(), payload.c_str());
-				return true;
 		}
 		else {
 			// radio if levels low
 
-			if (WiFi.status() == WL_CONNECTED) {
-				// try to reconnect mqtt
-			}
-			else {
-				// lost wifi, try to reconnect to wifi
-			}
+			try_reconnect();
 		}
 
 	}
@@ -116,9 +114,8 @@ bool Reporter::report_data(int mains_status, int battery_avg) {
 		// radio if levels low
 
 		if (reporter_state == MQTT_LOST) {
-			// try to regain connection
+			try_reconnect();
 		}
-		return true;
 	}
 }
 
@@ -126,6 +123,26 @@ void Reporter::mqtt_loop() {
 	mqtt_client->loop();
 }
 
+void Reporter::try_reconnect() {
+
+	if (WiFi.status() != WL_CONNECTED) {
+		if (!Connect_Wifi()) {
+			reporter_state = MQTT_LOST;
+			return;
+		}
+	}
+	wifiClient.stop();
+	wifiClient.connect(iotc.iothubHost.c_str(), 8883);
+	//mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
+
+	if(!connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken)) {
+		reporter_state = MQTT_LOST;
+	}
+	else {
+		reporter_state = MQTT;
+	}
+
+}
 
 bool Reporter::connectMQTT(String deviceId, String username, String password) {
 		mqtt_client->disconnect();
@@ -190,6 +207,7 @@ void Reporter::getTime() {
 
 
 int Reporter::getDPSAuthString(const char* scopeId, const char* deviceId, const char* key, char *buffer, int bufferSize, size_t &outLength) {
+	// update the time
 	ntp.update();
 	unsigned long expiresSecond = ntp.epoch() + 7200;
 	assert(expiresSecond > 7200);
@@ -327,16 +345,16 @@ int Reporter::_getHostName(const char *scopeId, const char*deviceId, char *authH
 int Reporter::getHubHostName(const char *scopeId, const char* deviceId, const char* key, char *hostName) {
 	char authHeader[AUTH_BUFFER_SIZE] = {0};
 	size_t size = 0;
-	Serial.println("- iotc.dps : getting auth...");
+	//Serial.println("- iotc.dps : getting auth...");
 	if (getDPSAuthString(scopeId, deviceId, key, (char*)authHeader, AUTH_BUFFER_SIZE, size)) {
 		Serial.println("ERROR: getDPSAuthString has failed");
 		return 1;
 	}
-	Serial.println("- iotc.dps : getting operation id...");
+	//Serial.println("- iotc.dps : getting operation id...");
 	char operationId[AUTH_BUFFER_SIZE] = {0};
 	if (_getOperationId(scopeId, deviceId, authHeader, operationId) == 0) {
 		delay(4000);
-		Serial.println("- iotc.dps : getting host name...");
+		//Serial.println("- iotc.dps : getting host name...");
 		while( _getHostName(scopeId, deviceId, authHeader, operationId, hostName) == 2) delay(5000);
 		return 0;
 	}

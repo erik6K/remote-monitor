@@ -34,12 +34,13 @@ class Reporter {
 		Reporter();
 
 		void Init();
-		bool report_data(int mains_status, int battery_voltage);
+		void report_data(int mains_status, int battery_voltage);
 
 		void mqtt_loop();
 
 	private:
 		bool Connect_Wifi();
+		void try_reconnect();
 		void getTime();
 
 		/*

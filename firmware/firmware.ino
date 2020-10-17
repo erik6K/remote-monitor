@@ -112,7 +112,7 @@ void loop() {
 			REPORT_counter++;
 			if (REPORT_counter >= 10) {
 				REPORT_counter = 0;
-
+				SerialUSB.println("Trying to Report Data...");
 				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
 			

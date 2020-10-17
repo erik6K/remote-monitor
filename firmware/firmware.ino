@@ -106,7 +106,7 @@ void loop() {
 			monitor.verify_50Hz();
 
 			SerialUSB.print("50Hz: ");
-			SerialUSB.println(monitor.get_mains_status() ? "Yes" : "No");
+			SerialUSB.println(monitor.get_mains_status() ? "ON" : "OFF");
 
 			// after 10 mains checks we report data to web
 			REPORT_counter++;

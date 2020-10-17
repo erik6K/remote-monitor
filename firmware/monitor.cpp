@@ -20,7 +20,10 @@ void Monitor::Init() {
 	init_ADC_Pins();
 	init_ADC_Clock();
 
-	mains_status = 0;
+	//mains_status = 0;
+	mains_stat_ind = 0;
+	battery_index = 0;
+
 }
 
 void Monitor::init_ADC_Pins() {
@@ -182,31 +185,34 @@ void Monitor::verify_50Hz() {
 //	SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
 
 	// check if 50Hz magnitude is at least 5 times larger than noise floor
-	mains_status = (mag_50Hz > noise_floor*5 ? 1 : 0);
+	mains_status[mains_stat_ind] = (mag_50Hz > noise_floor*5 ? 1 : 0);
 
-	if (mains_status) led.g = 80;
+	// to be removed
+	if (mains_status[mains_stat_ind]) led.g = 80;
 	setLEDs();
+
+	// cycle the index for moving average
+	mains_stat_ind = (mains_stat_ind + 1) % NUM_CYCLES_B4_REPORT;
 }
 
 bool Monitor::add_mains_sample(int smpl) {
 
-	mains_samples[mains_index] = smpl;
-	mains_index++;
+	mains_samples[mains_samp_ind] = smpl;
+	mains_samp_ind++;
 
-	if (mains_index == SAMPLES) {
+	if (mains_samp_ind == SAMPLES) {
 		adc_BUSY = false;
 		return false;
 	}
 	else return true;
-
 }
 
 void Monitor::record_battery_sample(int smpl) {
-	static int ind = 0;
 
-	battery_samples[ind] = smpl;
+	battery_samples[battery_index] = smpl;
 
-	ind = (ind + 1) % NUM_BATT_SAMPLES;
+	// cycle the index for moving average
+	battery_index = (battery_index + 1) % NUM_BATT_SAMPLES;
 }
 
 int Monitor::get_mains_sample(int ind) {
@@ -216,7 +222,7 @@ int Monitor::get_mains_sample(int ind) {
 void Monitor::take_mains_samples() {
 
 	adc_BUSY = true;
-	mains_index = 0;
+	mains_samp_ind = 0;
 	init_ADC_Freerun();
 
 	trig_ADC();
@@ -237,7 +243,7 @@ void Monitor::take_battery_sample() {
 	trig_ADC();
 }
 
-
+/* calculates the average and minimum values of the battery samples taken */
 float Monitor::get_battery_volts() {
 	int min = 4096;
 	int avg = 0;
@@ -256,7 +262,15 @@ float Monitor::get_battery_volts() {
 }
 
 int Monitor::get_mains_status() {
-	return mains_status;
+	return mains_status[mains_stat_ind];
+
+	uint8_t yes = 0, no = 0;
+
+	for (int i = 0; i < NUM_CYCLES_B4_REPORT; i++) {
+		if (mains_status[i] > 0) yes++;
+		else no++;
+	}
+	return (yes >= no ? 1 : 0);
 }
 
 void Monitor::setLEDs() {

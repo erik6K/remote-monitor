@@ -13,8 +13,6 @@ Reporter reporter;
 WiFiUDP wifiUdp;
 // create an NTP object
 NTP ntp(wifiUdp);
-// Create an rtc object
-//RTCZero rtc;
 
 Reporter::Reporter() {
 
@@ -25,6 +23,7 @@ void Reporter::Init() {
 		if (!Connect_Wifi()) {
 			// no wifi, assume radio only state
 			reporter_state = RADIO_ONLY;
+
 		}
 		else {
 			// get current UTC time
@@ -109,7 +108,7 @@ void Reporter::report_data(int mains_status, int battery_avg) {
 		}
 
 	}
-	// RADIO
+	// RADIO -- RADIO_ONLY or MQTT_LOST states
 	else {
 		// radio if levels low
 
@@ -120,9 +119,10 @@ void Reporter::report_data(int mains_status, int battery_avg) {
 }
 
 void Reporter::mqtt_loop() {
-	mqtt_client->loop();
+	if (reporter_state == MQTT) mqtt_client->loop();
 }
 
+/* called if reporter has lost connection to wifi or mqtt broker */
 void Reporter::try_reconnect() {
 
 	if (WiFi.status() != WL_CONNECTED) {
@@ -197,9 +197,6 @@ void Reporter::getTime() {
 		SerialUSB.print(F("Current time: "));
 		SerialUSB.print(ntp.formattedTime("%d. %B %Y - "));
 		SerialUSB.println(ntp.formattedTime("%A %T"));
-
-	//	rtc.begin();
-	//	rtc.setEpoch(WiFi.getTime());
 }
 
 

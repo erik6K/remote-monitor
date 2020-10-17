@@ -46,14 +46,15 @@ class Monitor {
 
 		void setLEDs();
 
-
 		int16_t mains_samples[SAMPLES];
-		int mains_status;
+		int mains_samp_ind;
+
+		uint8_t mains_status[NUM_CYCLES_B4_REPORT] = {0};
+		uint8_t mains_stat_ind;
 
 		int battery_samples[NUM_BATT_SAMPLES];
+		uint8_t battery_index;
 
-		int mains_index;
-		int battery_index;
 		bool adc_BUSY;
 
 		struct LED {

@@ -1,11 +1,13 @@
 // AZURE IOT CENTRAL
-static char PROGMEM iotc_scopeId[] = "0ne0018A252";
-static char PROGMEM iotc_deviceId[] = "device2";
-static char PROGMEM iotc_deviceKey[] = "TsmHvdqbDapfYWqB6hKl1L09CifUi4TN2TY1uFg6Ox8=";
-static long timetolive = 864000; //Seconds before access key expires. Will reset when device restarts. 864000 = 10 days.
+#define IOTC_SCOPEID "0ne0018A252"
+#define IOTC_DEVICEID "device2"
+#define IOTC_DEVICEKEY "TsmHvdqbDapfYWqB6hKl1L09CifUi4TN2TY1uFg6Ox8="
 
 // WI-FI
 static char PROGMEM wifi_ssid[] = "iPhone";
 static char PROGMEM wifi_password[] = "87654321";
+#define TIMETOLIVE 864000 //Seconds before access key expires. Will reset when device restarts. 864000 = 10 days.
 
-// DEVICE
+// WI-FI
+#define WIFI_SSID ""
+#define WIFI_PASSWORD ""

@@ -54,23 +54,23 @@ void setup() {
 	// LED Pin is D6 - also connected to mains sensor input on prototype board
 	//pinMode(LED_BUILTIN, OUTPUT);
  
-	reporter.Connect_Wifi();
 	reporter.Init();
-
+  
+	// init object for monitoring battery and mains
 	monitor.Init();
 
 	// initialise timer
 	Init_Timer();
 
+	// enter battery sampling state
 	g_STATE = PERIODIC;
-
 }
 
 void loop() {
 	static int REPORT_counter = 0;
 
 	// give the MQTT handler time to do its thing
-	 reporter.mqqt_loop();
+	reporter.mqtt_loop();
 
 	switch(g_STATE)
 	{
@@ -93,6 +93,7 @@ void loop() {
 
 			monitor.take_mains_samples();
 			while(monitor.adc_busy()); // wait for samples to be taken
+
 			/*
 			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
@@ -111,9 +112,10 @@ void loop() {
 			REPORT_counter++;
 			if (REPORT_counter >= 10) {
 				REPORT_counter = 0;
+				SerialUSB.println("Trying to Report Data...");
 				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
-			// else just re-enter periodic state
+			
 			g_STATE = PERIODIC;
 			ENABLE_TIMER()
 
@@ -134,6 +136,11 @@ void loop() {
 
 			while(1);
 
+			break;
+
+		default:
+			// should never end up here - restart system
+			NVIC_SystemReset();
 			break;
 	}
 

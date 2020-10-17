@@ -6,5 +6,5 @@
 #define TIMETOLIVE 864000 //Seconds before access key expires. Will reset when device restarts. 864000 = 10 days.
 
 // WI-FI
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
+#define WIFI_SSID "iPhone"
+#define WIFI_PASSWORD "87654321"

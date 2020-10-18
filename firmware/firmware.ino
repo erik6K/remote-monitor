@@ -8,7 +8,7 @@
 
 enum State { PERIODIC, ANALYSE, DEBUG };
 
-volatile State g_STATE;
+volatile State global_STATE;
 volatile bool flag_update = 0;
 
 
@@ -48,31 +48,27 @@ void setup() {
 	while (!SerialUSB) {
 	// wait for serial port to connect
 	}
-
-	// <pin initialisations here>
-
-	// LED Pin is D6 - also connected to mains sensor input on prototype board
-	//pinMode(LED_BUILTIN, OUTPUT);
- 
+ 	
+ 	// init connection to azure IoT hub / radio only mode
 	reporter.Init();
 
-	// init object for monitoring battery and mains
+	// init peripherals for monitoring battery and mains
 	monitor.Init();
 
 	// initialise timer
 	Init_Timer();
 
 	// enter battery sampling state
-	g_STATE = PERIODIC;
+	global_STATE = PERIODIC;
 }
 
 void loop() {
-	static int REPORT_counter = 0;
+	static int report_counter = 0;
 
 	// give the MQTT handler time to do its thing - does nothing if RADIO_ONLY
 	reporter.mqtt_loop();
 
-	switch(g_STATE)
+	switch(global_STATE)
 	{
 		case PERIODIC:
 
@@ -82,7 +78,7 @@ void loop() {
 				monitor.take_battery_sample();
 
 				SerialUSB.print("Vb: ");
-				SerialUSB.println(monitor.get_battery_volts());
+				SerialUSB.println(monitor.get_latest_battery_volts());
 			}
 
 			break;
@@ -106,18 +102,20 @@ void loop() {
 			monitor.verify_50Hz();
 
 			SerialUSB.print("50Hz: ");
-			SerialUSB.println(monitor.get_mains_status() ? "ON" : "OFF");
+			SerialUSB.println(monitor.get_latest_mains_status() ? "ON" : "OFF");
+
+			monitor.save_min_battery();
 
 			// after 10 mains checks we report data to web
-			REPORT_counter++;
-			if (REPORT_counter >= 10) {
-				REPORT_counter = 0;
+			report_counter++;
+			if (report_counter >= NUM_CYCLES_B4_REPORT) {
+				report_counter = 0;
 				SerialUSB.println("Trying to Report Data...");
 
 				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
 			
-			g_STATE = PERIODIC;
+			global_STATE = PERIODIC;
 			ENABLE_TIMER()
 
 			break;
@@ -144,34 +142,30 @@ void loop() {
 			NVIC_SystemReset();
 			break;
 	}
-
 }
 
 /* ------Interrupt Service Routines------ */
 
 void TC4_Handler() {	// ISR for timer TC4
 	static uint8_t counter = 0;
-	//static uint8_t led = 0;
 
-	// Check for overflow (OVF) interrupt
+	// check for overflow (OVF) interrupt
 	if (TC4->COUNT8.INTFLAG.bit.OVF && TC4->COUNT8.INTENSET.bit.OVF) {
 
 		// sample battery voltage 10 times before state change
-		if (counter < NUM_CYCLES_B4_REPORT) {
-			//led = ~led;
-	   		//digitalWrite(LED_BUILTIN, led);
+		if (counter < NUM_BATT_SAMPLES) {
 
 	   		flag_update = true;
 	   		counter++;
 	   	}
 	   	else {
 	   		counter = 0;
-	   		g_STATE = ANALYSE;
+	   		global_STATE = ANALYSE;
 	   		DISABLE_TIMER()
 	   	}
       
 
-	REG_TC4_INTFLAG = TC_INTFLAG_OVF;	// Clear the OVF interrupt flag
+	REG_TC4_INTFLAG = TC_INTFLAG_OVF;	// clear the overflow interrupt flag
 	}
 
 }

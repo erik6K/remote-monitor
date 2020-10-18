@@ -8,22 +8,16 @@ Monitor::Monitor() {
 
 void Monitor::Init() {
 
-	// pins also connected to A1 on prototype board
-	pinMode(6, INPUT);
-	pinMode(7, INPUT);
-
-	// RGB LED Pin Init
-	WiFiDrv::pinMode(25, OUTPUT); //GREEN
-	WiFiDrv::pinMode(26, OUTPUT); //RED
-	WiFiDrv::pinMode(27, OUTPUT); //BLUE
+	// mains indicator led pin init
+	pinMode(LED_BUILTIN, OUTPUT);
 
 	init_ADC_Pins();
 	init_ADC_Clock();
 
-	//mains_status = 0;
-	mains_stat_ind = 0;
-	battery_index = 0;
-
+	// init indexes
+	next_mains_stat = 0;
+	next_battery_samp = 0;
+	next_battery_min = 0;
 }
 
 void Monitor::init_ADC_Pins() {
@@ -33,7 +27,7 @@ void Monitor::init_ADC_Pins() {
 	PORT->Group[PORTB].PINCFG[2].bit.PMUXEN = 1;
 	PORT->Group[PORTB].PINCFG[3].bit.PMUXEN = 1;
 
-	// PORTB(2*[1]) = PORTB02, (2*[1] + 1) = PORTB03
+	// PORTB(2*[1]) = PORTB02, PORTB(2*[1] + 1) = PORTB03
 	PORT->Group[PORTB].PMUX[1].reg = PORT_PMUX_PMUXE_B | PORT_PMUX_PMUXO_B;
 }
 
@@ -139,12 +133,9 @@ void Monitor::remove_DC() {
 		if (mains_samples[i] > max) max = mains_samples[i];
 	}
 	
-	SerialUSB.print("Min: "); SerialUSB.println(min);
-	SerialUSB.print("Max: "); SerialUSB.println(max);
-
-	led.r = 0; led.g = 0; led.b = 0;
-	if (max - min < 1000) led.r = 80;
-	else if (max - min > 4090) led.b = 80;
+	// print the minimum and maximum of the signal sampled for debugging
+	//SerialUSB.print("Min: "); SerialUSB.println(min);
+	//SerialUSB.print("Max: "); SerialUSB.println(max);
 	
 	int offset = ((max - min) / 2) + min;
 
@@ -161,7 +152,7 @@ void Monitor::verify_50Hz() {
 
 	uint8_t histogram[256] = {0}; // histogram for noise floor detection
 
-	// bins 3 and 4 correspond to ~35 and ~51 Hz respectively
+	// bins 3 and 4 correspond to roughly ~35 and ~51 Hz, so get an average between them
 	int mag_50Hz = (mains_samples[3] + mains_samples[4]) / 2;
 
 	// 
@@ -181,26 +172,27 @@ void Monitor::verify_50Hz() {
 			noise_floor = i + 1; // +1 to prevent noise floor of 0
 		}
 	}
-//	SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
-//	SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
+
+	// print the magnitude of 50Hz and the noise floor for debugging
+	//SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
+	//SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
 
 	// check if 50Hz magnitude is at least 5 times larger than noise floor
-	mains_status[mains_stat_ind] = (mag_50Hz > noise_floor*5 ? 1 : 0);
+	mains_status[next_mains_stat] = (mag_50Hz > noise_floor*5 ? 1 : 0);
 
-	// to be removed
-	if (mains_status[mains_stat_ind]) led.g = 80;
-	setLEDs();
+	// Set LED if 50Hz is detected
+	digitalWrite(LED_BUILTIN, mains_status[next_mains_stat] ? HIGH : LOW);
 
-	// cycle the index for moving average
-	mains_stat_ind = (mains_stat_ind + 1) % NUM_CYCLES_B4_REPORT;
+	// increment index for average
+	next_mains_stat = (next_mains_stat + 1) % NUM_CYCLES_B4_REPORT;
 }
 
 bool Monitor::add_mains_sample(int smpl) {
 
-	mains_samples[mains_samp_ind] = smpl;
-	mains_samp_ind++;
+	mains_samples[next_mains_samp] = smpl;
+	next_mains_samp++;
 
-	if (mains_samp_ind == SAMPLES) {
+	if (next_mains_samp == SAMPLES) {
 		adc_BUSY = false;
 		return false;
 	}
@@ -209,10 +201,10 @@ bool Monitor::add_mains_sample(int smpl) {
 
 void Monitor::record_battery_sample(int smpl) {
 
-	battery_samples[battery_index] = smpl;
+	battery_samples[next_battery_samp] = smpl;
 
-	// cycle the index for moving average
-	battery_index = (battery_index + 1) % NUM_BATT_SAMPLES;
+	// increment index
+	next_battery_samp = (next_battery_samp + 1) % NUM_BATT_SAMPLES;
 }
 
 int Monitor::get_mains_sample(int ind) {
@@ -222,7 +214,7 @@ int Monitor::get_mains_sample(int ind) {
 void Monitor::take_mains_samples() {
 
 	adc_BUSY = true;
-	mains_samp_ind = 0;
+	next_mains_samp = 0;
 	init_ADC_Freerun();
 
 	trig_ADC();
@@ -243,27 +235,36 @@ void Monitor::take_battery_sample() {
 	trig_ADC();
 }
 
-/* calculates the average and minimum values of the battery samples taken */
-float Monitor::get_battery_volts() {
+/* find and save min value for averaging */
+void Monitor::save_min_battery() {
 	int min = 4096;
-	int avg = 0;
-	float result[2];
 
 	for (int i = 0; i < NUM_BATT_SAMPLES; i++) {
-		if (min > battery_samples[i]) min = battery_samples[i];
-		avg += battery_samples[i];
+		if (battery_samples[i] < min) min = battery_samples[i];
 	}
-	avg = avg / NUM_BATT_SAMPLES;
+	battery_min_values[next_battery_min] = min;
 
-	result[0] = (float)min / 1240.91 * 6.4;
-	result[1] = (float)avg / 1240.91 * 6.4;
-
-	return result[1];
+	// increment index
+	next_battery_min = (next_battery_min + 1) % NUM_CYCLES_B4_REPORT;
 }
 
-int Monitor::get_mains_status() {
-	return mains_status[mains_stat_ind];
+/* calculate the average of the minimum values and scale to volts */
+float Monitor::get_battery_volts() {
+	int avg = 0;
+	float result;
 
+	for (int i = 0; i < NUM_CYCLES_B4_REPORT; i++) {
+		avg += battery_min_values[i];
+	}
+
+	avg = avg / NUM_CYCLES_B4_REPORT;
+	result = (float)avg * BATT_SCALING_FACTOR; // scale adc value to real voltage
+
+	return result;
+}
+
+/* return whichever occured more frequently */
+int Monitor::get_mains_status() {
 	uint8_t yes = 0, no = 0;
 
 	for (int i = 0; i < NUM_CYCLES_B4_REPORT; i++) {
@@ -273,10 +274,12 @@ int Monitor::get_mains_status() {
 	return (yes >= no ? 1 : 0);
 }
 
-void Monitor::setLEDs() {
-	WiFiDrv::analogWrite(25, led.g);
-	WiFiDrv::analogWrite(26, led.r);
-	WiFiDrv::analogWrite(27, led.b);
+float Monitor::get_latest_battery_volts() {
+	return (float)battery_samples[next_battery_samp ? next_battery_samp - 1 : 9] * BATT_SCALING_FACTOR;
+}
+
+int Monitor::get_latest_mains_status() {
+	return mains_status[next_mains_stat ? next_mains_stat - 1: 9];
 }
 
 /* ------ADC Interrupt Service Routine------ */

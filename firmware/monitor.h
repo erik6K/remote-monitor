@@ -19,11 +19,9 @@ class Monitor {
 		void Init();
 
 		void take_battery_sample();
-		float get_battery_volts();
-
 		void take_mains_samples();
-		bool adc_busy();
 
+		bool adc_busy();
 		void trig_ADC();
 
 		bool add_mains_sample(int smpl);
@@ -33,7 +31,13 @@ class Monitor {
 		void remove_DC();
 		void compute_fft();
 		void verify_50Hz();
+
+		void save_min_battery();
+
+		float get_battery_volts();
+		float get_latest_battery_volts();
 		int get_mains_status();
+		int get_latest_mains_status();
 
 		ADC_State adc_state;
 
@@ -44,23 +48,19 @@ class Monitor {
 		void init_ADC_Freerun();
 		void init_ADC_Single();
 
-		void setLEDs();
-
 		int16_t mains_samples[SAMPLES];
-		int mains_samp_ind;
+		int next_mains_samp;
 
 		uint8_t mains_status[NUM_CYCLES_B4_REPORT] = {0};
-		uint8_t mains_stat_ind;
+		uint8_t next_mains_stat;
 
-		int battery_samples[NUM_BATT_SAMPLES];
-		uint8_t battery_index;
+		uint16_t battery_samples[NUM_BATT_SAMPLES];
+		uint8_t next_battery_samp;
+
+		uint16_t battery_min_values[NUM_CYCLES_B4_REPORT] = {0};
+		uint8_t next_battery_min;
 
 		bool adc_BUSY;
-
-		struct LED {
-			uint8_t r = 0, g = 0, b = 0;
-		};
-		LED led;
 
 };
 extern Monitor monitor;

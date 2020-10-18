@@ -18,29 +18,39 @@ Reporter::Reporter() {
 
 }
 
+/* if no successful connection to IoT hub is made during initialisation, device
+   assumes a radio only state where it makes no further attempts to connect */
 void Reporter::Init() {
 
-		if (!Connect_Wifi()) {
+		// connection status RGB LED pin init
+		WiFiDrv::pinMode(25, OUTPUT); //GREEN
+		WiFiDrv::pinMode(26, OUTPUT); //RED
+		WiFiDrv::pinMode(27, OUTPUT); //BLUE
+
+		// try to connect to IoT Hub
+		if (!connect_wifi()) {
 			// no wifi, assume radio only state
 			reporter_state = RADIO_ONLY;
-
+			set_RGB_LED(60,0,0); // RED -- radio only mode
 		}
 		else {
+			set_RGB_LED(0,0,60); // BLUE -- wifi connected
+
 			// get current UTC time
-			getTime();
+			SerialUSB.println("Getting Time...");
+			ntp.begin();
 
 			SerialUSB.println("Getting IoT Hub host from Azure IoT DPS");
 
 			iotc.deviceId = IOTC_DEVICEID;
-		//	sharedAccessKey = IOTC_DEVICEKEY;
 			char hostName[64] = {0};
 			getHubHostName(IOTC_SCOPEID, IOTC_DEVICEID, IOTC_DEVICEKEY, hostName);
 			iotc.iothubHost = hostName;
 
 			// create SAS token and user name for connecting to MQTT broker
 			String url = iotc.iothubHost + urlEncode(String((char*)F("/devices/") + iotc.deviceId).c_str());
-			//char *devKey = IOTC_DEVICEKEY;
 
+			ntp.update();
 			long expire = ntp.epoch() + TIMETOLIVE;
 			iotc.sasToken = createIotHubSASToken(IOTC_DEVICEKEY, url, expire);
 
@@ -55,15 +65,25 @@ void Reporter::Init() {
 				wifiClient.stop();
 				delete(mqtt_client);
 				reporter_state = RADIO_ONLY;
+				set_RGB_LED(60,0,0); // RED -- radio only mode
 			}
 			else {
 				// successfully connected
 				reporter_state = MQTT;
+				set_RGB_LED(0,60,0); // GREEN -- connected to IoT hub
 			}
 		}
 }
+/*
+void Reporter::getTime() {
+	ntp.begin();
+	ntp.update();
+	SerialUSB.print(F("Current time: "));
+	SerialUSB.print(ntp.formattedTime("%d. %B %Y - "));
+	SerialUSB.println(ntp.formattedTime("%A %T"));
+}*/
 
-bool Reporter::Connect_Wifi() {
+bool Reporter::connect_wifi() {
 
 	int status = WL_IDLE_STATUS;
 	int retry = 0;
@@ -80,7 +100,7 @@ bool Reporter::Connect_Wifi() {
 		return false;
 }
 
-void Reporter::report_data(int mains_status, int battery_avg) {
+void Reporter::report_data(int mains_status, float battery_avg) {
 
 	// INTERNET
 	if (reporter_state == MQTT) {
@@ -108,13 +128,10 @@ void Reporter::report_data(int mains_status, int battery_avg) {
 		}
 
 	}
-	// RADIO -- RADIO_ONLY or MQTT_LOST states
+	// RADIO_ONLY
 	else {
 		// radio if levels low
 
-		if (reporter_state == MQTT_LOST) {
-			try_reconnect();
-		}
 	}
 }
 
@@ -126,22 +143,18 @@ void Reporter::mqtt_loop() {
 void Reporter::try_reconnect() {
 
 	if (WiFi.status() != WL_CONNECTED) {
-		if (!Connect_Wifi()) {
-			reporter_state = MQTT_LOST;
+		if (!connect_wifi()) {
+			set_RGB_LED(60,0,0); // RED -- no connection
 			return;
 		}
 	}
+	set_RGB_LED(0,0,60); // BLUE -- connected to wifi
 	wifiClient.stop();
 	wifiClient.connect(iotc.iothubHost.c_str(), 8883);
 	//mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
 
-	if(!connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken)) {
-		reporter_state = MQTT_LOST;
-	}
-	else {
-		reporter_state = MQTT;
-	}
-
+	if (connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken))
+		set_RGB_LED(0,60,0); // GREEN -- connected to IoT hub
 }
 
 bool Reporter::connectMQTT(String deviceId, String username, String password) {
@@ -150,7 +163,7 @@ bool Reporter::connectMQTT(String deviceId, String username, String password) {
 		SerialUSB.println(F("Starting IoT Hub connection"));
 		int retry = 0;
 
-		while(retry < 10 && !mqtt_client->connected() && WiFi.status() == WL_CONNECTED) {
+		while(retry < 5 && !mqtt_client->connected() && WiFi.status() == WL_CONNECTED) {
 
 				if (mqtt_client->connect(deviceId.c_str(), username.c_str(), password.c_str())) {
 					SerialUSB.println(F("===> mqtt connected"));
@@ -189,14 +202,10 @@ String Reporter::createIotHubSASToken(const char *key, String url, long expire) 
 		+ urlEncode((const char*)encodedSign) + (char*)F("&se=") + String(expire);
 }
 
-void Reporter::getTime() {
-		SerialUSB.println(F("Getting the time from time service: "));
-
-		ntp.begin();
-		ntp.update();
-		SerialUSB.print(F("Current time: "));
-		SerialUSB.print(ntp.formattedTime("%d. %B %Y - "));
-		SerialUSB.println(ntp.formattedTime("%A %T"));
+void Reporter::set_RGB_LED(uint8_t r, uint8_t g, uint8_t b) {
+	WiFiDrv::analogWrite(25, g);
+	WiFiDrv::analogWrite(26, r);
+	WiFiDrv::analogWrite(27, b);
 }
 
 

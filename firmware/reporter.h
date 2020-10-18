@@ -9,6 +9,7 @@
 #include <assert.h>
 
 #include <WiFiNINA.h>
+#include <utility/wifi_drv.h>
 #include <WiFiUdp.h>
 #include <PubSubClient.h>
 
@@ -33,14 +34,15 @@ class Reporter {
 		Reporter();
 
 		void Init();
-		void report_data(int mains_status, int battery_voltage);
+		void report_data(int mains_status, float battery_voltage);
 
 		void mqtt_loop();
 
 	private:
-		bool Connect_Wifi();
+		bool connect_wifi();
 		void try_reconnect();
-		void getTime();
+
+		void set_RGB_LED(uint8_t r, uint8_t g, uint8_t b);
 
 		struct IoTDetails {
 			String deviceId;
@@ -52,7 +54,7 @@ class Reporter {
 		WiFiSSLClient wifiClient;
 		PubSubClient *mqtt_client = NULL;
 
-		enum Reporter_STATE { MQTT, MQTT_LOST, RADIO_ONLY } reporter_state;
+		enum Reporter_STATE { MQTT, RADIO_ONLY } reporter_state;
 
 
 		bool connectMQTT(String deviceId, String username, String password);

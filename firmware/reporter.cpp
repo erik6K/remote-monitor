@@ -49,6 +49,7 @@ void Reporter::Init() {
 			// connect to the IoT Hub MQTT broker
 			wifiClient.connect(iotc.iothubHost.c_str(), 8883);
 			mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
+			mqtt_client->setBufferSize(2048);
 
 			if(!connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken)) {
 				// if we cant connect initially, assume radio only state and notify operator
@@ -80,7 +81,7 @@ bool Reporter::Connect_Wifi() {
 		return false;
 }
 
-void Reporter::report_data(int mains_status, int battery_avg) {
+void Reporter::report_data(int mains_status, float battery_avg) {
 
 	// INTERNET
 	if (reporter_state == MQTT) {
@@ -96,7 +97,7 @@ void Reporter::report_data(int mains_status, int battery_avg) {
 				String payload = F("{\"MainsStatus\": \"{mains}\", \"BatteryVoltage\": {battery}}");
 
 				payload.replace(F("{mains}"), mains_status ? "ON" : "OFF");//);
-				payload.replace(F("{battery}"), String(battery_avg));
+				payload.replace(F("{battery}"), String(battery_avg,1));
 
 				SerialUSB.println(payload.c_str());
 				mqtt_client->publish(topic.c_str(), payload.c_str());

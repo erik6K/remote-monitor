@@ -34,7 +34,7 @@ class Reporter {
 		Reporter();
 
 		void Init();
-		void report_data(int mains_status, float battery_voltage);
+		void report_data(int mains_status, float battery_min);
 
 		void mqtt_loop();
 

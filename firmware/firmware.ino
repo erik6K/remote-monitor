@@ -6,7 +6,7 @@
 #include "monitor.h"
 
 
-enum State { PERIODIC, ANALYSE, DEBUG };
+enum State { PERIODIC, ANALYSE };
 
 volatile State global_STATE;
 volatile bool flag_update = 0;
@@ -91,11 +91,13 @@ void loop() {
 			while(monitor.adc_busy()); // wait for samples to be taken
 
 			/*
+			// dump mains samples
 			for (int i=0; i<SAMPLES; i++) {
 			SerialUSB.print(i);
 			SerialUSB.print(',');
 			SerialUSB.println(monitor.get_mains_sample(i));
 			}*/
+
 			monitor.remove_DC();
 			monitor.compute_fft();
 
@@ -117,23 +119,6 @@ void loop() {
 			
 			global_STATE = PERIODIC;
 			ENABLE_TIMER()
-
-			break;
-
-		case DEBUG:
-
-			monitor.take_mains_samples();
-			while(monitor.adc_busy());
-
-			monitor.remove_DC();
-			
-			for (int i=0; i<SAMPLES; i++) {
-			SerialUSB.print(i);
-			SerialUSB.print(',');
-			SerialUSB.println(monitor.get_mains_sample(i));
-			}
-
-			while(1);
 
 			break;
 

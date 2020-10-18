@@ -3,8 +3,6 @@
 
 
 #define RADIO_VOX_PIN 15
-#define MAIN_SENSOR_PIN 16
-#define BATTERY_VOLTS_PIN 17
 
 /* 
 NUM_CYCLES defines how many times the ANALYSE state is entered before data is

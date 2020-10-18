@@ -2,8 +2,6 @@
 #define MONITOR_H
 
 #include <Arduino.h>
-#include <WiFiNINA.h>
-#include <utility/wifi_drv.h>
 #include "src/Adafruit_Zero_FFT_Library/Adafruit_ZeroFFT.h"
 #include "defs.h"
 
@@ -25,8 +23,10 @@ class Monitor {
 		void trig_ADC();
 
 		bool add_mains_sample(int smpl);
-		int get_mains_sample(int ind);
 		void record_battery_sample(int smpl);
+
+		/* debug function for dumping mains samples */
+		int get_mains_sample(int ind);
 
 		void remove_DC();
 		void compute_fft();

@@ -1,7 +1,30 @@
 /*
 
+A significant portion of this code has been derived from the following source:
 
+https://github.com/firedog1024/mkr1000-iotc/blob/master/LICENSE
 
+MIT License
+
+Copyright (c) 2019 firedog1024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 */
 
@@ -59,6 +82,7 @@ void Reporter::Init() {
 			// connect to the IoT Hub MQTT broker
 			wifiClient.connect(iotc.iothubHost.c_str(), 8883);
 			mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
+			mqtt_client->setBufferSize(2048);
 
 			if(!connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken)) {
 				// if we cant connect initially, assume radio only state and notify operator
@@ -74,14 +98,6 @@ void Reporter::Init() {
 			}
 		}
 }
-/*
-void Reporter::getTime() {
-	ntp.begin();
-	ntp.update();
-	SerialUSB.print(F("Current time: "));
-	SerialUSB.print(ntp.formattedTime("%d. %B %Y - "));
-	SerialUSB.println(ntp.formattedTime("%A %T"));
-}*/
 
 bool Reporter::connect_wifi() {
 
@@ -100,7 +116,7 @@ bool Reporter::connect_wifi() {
 		return false;
 }
 
-void Reporter::report_data(int mains_status, float battery_avg) {
+void Reporter::report_data(int mains_status, float battery_min) {
 
 	// INTERNET
 	if (reporter_state == MQTT) {
@@ -116,7 +132,7 @@ void Reporter::report_data(int mains_status, float battery_avg) {
 				String payload = F("{\"MainsStatus\": \"{mains}\", \"BatteryVoltage\": {battery}}");
 
 				payload.replace(F("{mains}"), mains_status ? "ON" : "OFF");//);
-				payload.replace(F("{battery}"), String(battery_avg));
+				payload.replace(F("{battery}"), String(battery_min,1));
 
 				SerialUSB.println(payload.c_str());
 				mqtt_client->publish(topic.c_str(), payload.c_str());
@@ -151,7 +167,6 @@ void Reporter::try_reconnect() {
 	set_RGB_LED(0,0,60); // BLUE -- connected to wifi
 	wifiClient.stop();
 	wifiClient.connect(iotc.iothubHost.c_str(), 8883);
-	//mqtt_client = new PubSubClient(iotc.iothubHost.c_str(), 8883, wifiClient);
 
 	if (connectMQTT(iotc.deviceId, iotc.username, iotc.sasToken))
 		set_RGB_LED(0,60,0); // GREEN -- connected to IoT hub

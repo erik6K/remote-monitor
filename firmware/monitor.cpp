@@ -174,8 +174,8 @@ void Monitor::verify_50Hz() {
 	}
 
 	// print the magnitude of 50Hz and the noise floor for debugging
-	//SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
-	//SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
+	SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
+	SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
 
 	// check if 50Hz magnitude is at least 5 times larger than noise floor
 	mains_status[next_mains_stat] = (mag_50Hz > noise_floor*5 ? 1 : 0);

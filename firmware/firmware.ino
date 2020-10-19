@@ -16,9 +16,9 @@ volatile bool flag_update = 0;
 void Init_Timer() {
 
 	// generic clock (GCLK4) used to clock timers
-	REG_GCLK_GENDIV =	GCLK_GENDIV_DIV(3) |	// Divide the 48MHz clock source by divisor 3: 48MHz/3=16MHz
-						GCLK_GENDIV_ID(4);		// Configure Generic Clock (GCLK) 4
-	while (GCLK->STATUS.bit.SYNCBUSY);			// Wait for synchronization
+	REG_GCLK_GENDIV =	GCLK_GENDIV_DIV(3) |	// divide the 48MHz clock source by divisor 3: 48MHz/3=16MHz
+						GCLK_GENDIV_ID(4);		// configure Generic Clock (GCLK) 4
+	while (GCLK->STATUS.bit.SYNCBUSY);			// wait for synchronization
 
 	REG_GCLK_GENCTRL =	GCLK_GENCTRL_IDC |           // improved duty cycle for odd div
 						GCLK_GENCTRL_GENEN |         // enable GCLK
@@ -26,8 +26,8 @@ void Init_Timer() {
 						GCLK_GENCTRL_ID(4);          // configure GCLK4
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	REG_GCLK_CLKCTRL =	GCLK_CLKCTRL_CLKEN |		// Enable GCLK4
-						GCLK_CLKCTRL_GEN_GCLK4 |	// Select GCLK4
+	REG_GCLK_CLKCTRL =	GCLK_CLKCTRL_CLKEN |		// enable GCLK4
+						GCLK_CLKCTRL_GEN_GCLK4 |	// select GCLK4
 						GCLK_CLKCTRL_ID_TC4_TC5;	// GCLK4 to TC4 and TC5
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
@@ -85,8 +85,6 @@ void loop() {
 
 		case ANALYSE:
 
-			SerialUSB.println("ADC READINGS");
-
 			monitor.take_mains_samples();
 			while(monitor.adc_busy()); // wait for samples to be taken
 
@@ -112,8 +110,6 @@ void loop() {
 			report_counter++;
 			if (report_counter >= NUM_CYCLES_B4_REPORT) {
 				report_counter = 0;
-				SerialUSB.println("Trying to Report Data...");
-
 				reporter.report_data(monitor.get_mains_status(), monitor.get_battery_volts());
 			}
 			

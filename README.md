@@ -19,4 +19,5 @@ Developed for use in CITS3200, on behalf of SES CSU.
 
 ## Licences
 Hardware: CC BY-NC 3.0 AU
+
 Firmware: GPLv3

@@ -48,7 +48,6 @@ void Monitor::init_ADC_Clock() {
 
 void Monitor::init_ADC_Freerun() {
 
-	//REG_PAC2_WPCLR |= 0x10000; // clear write protect for adc
 	REG_ADC_CTRLA |= ADC_CTRLA_SWRST; // reset adc
 	while (ADC->STATUS.bit.SYNCBUSY);
 
@@ -174,8 +173,8 @@ void Monitor::verify_50Hz() {
 	}
 
 	// print the magnitude of 50Hz and the noise floor for debugging
-	SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
-	SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
+	//SerialUSB.print("50HZ: "); SerialUSB.println(mag_50Hz);
+	//SerialUSB.print("noise floor: "); SerialUSB.println(noise_floor);
 
 	// check if 50Hz magnitude is at least 5 times larger than noise floor
 	mains_status[next_mains_stat] = (mag_50Hz > noise_floor*5 ? 1 : 0);

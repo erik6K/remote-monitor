@@ -44,10 +44,11 @@ void Init_Timer() {
 
 void setup() {
 
-	SerialUSB.begin(9600);
+	// for debugging purposes
+	/*SerialUSB.begin(9600);
 	while (!SerialUSB) {
 	// wait for serial port to connect
-	}
+	}*/
  	
  	// init connection to azure IoT hub / radio only mode
 	reporter.Init();
@@ -77,8 +78,8 @@ void loop() {
 
 				monitor.take_battery_sample();
 
-				SerialUSB.print("Vb: ");
-				SerialUSB.println(monitor.get_latest_battery_volts());
+				//SerialUSB.print("Vb: "); // debugging
+				//SerialUSB.println(monitor.get_latest_battery_volts());
 			}
 
 			break;
@@ -101,8 +102,8 @@ void loop() {
 
 			monitor.verify_50Hz();
 
-			SerialUSB.print("50Hz: ");
-			SerialUSB.println(monitor.get_latest_mains_status() ? "ON" : "OFF");
+			//SerialUSB.print("50Hz: "); // debugging
+			//SerialUSB.println(monitor.get_latest_mains_status() ? "ON" : "OFF");
 
 			monitor.save_min_battery();
 

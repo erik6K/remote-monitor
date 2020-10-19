@@ -17,5 +17,6 @@ Created by:
 Developed for use in CITS3200, on behalf of SES CSU. 
 [The full git repository can be found here.](https://github.com/tarrantja/remote-monitor-web)
 
-## Licence
-This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 Australia License. 
+## Licences
+Hardware: CC BY-NC 3.0 AU
+Firmware: GPLv3
